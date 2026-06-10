@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FV Grifería — Auditoría PdV</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1B2A4A;
+  --navy-light: #243659;
+  --gold: #C8A84B;
+  --gold-light: #E8C870;
+  --red: #C0392B;
+  --red-light: #FADBD8;
+  --green: #1E8449;
+  --green-light: #D5F5E3;
+  --orange: #E67E22;
+  --orange-light: #FDEBD0;
+  --gray: #F4F6F9;
+  --gray2: #E8ECF1;
+  --text: #1a1a2e;
+  --text2: #5a6a82;
+  --white: #ffffff;
+  --radius: 14px;
+  --shadow: 0 4px 24px rgba(27,42,74,0.12);
+  --shadow-sm: 0 2px 8px rgba(27,42,74,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--gray);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ─── HEADER ─── */
+.app-header {
+  background: var(--navy);
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 20px rgba(27,42,74,0.3);
+}
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+}
+.logo-area { display: flex; align-items: center; gap: 10px; }
+.logo-badge {
+  background: var(--gold);
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 13px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  letter-spacing: 0.5px;
+}
+.app-title { color: white; font-size: 15px; font-weight: 600; }
+.app-subtitle { color: rgba(255,255,255,0.55); font-size: 11px; margin-top: 1px; }
+
+.progress-bar-outer {
+  height: 3px;
+  background: rgba(255,255,255,0.1);
+}
+.progress-bar-inner {
+  height: 3px;
+  background: var(--gold);
+  transition: width 0.4s ease;
+}
+
+/* ─── STEPS NAV ─── */
+.steps-nav {
+  background: var(--navy-light);
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 0;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.steps-nav::-webkit-scrollbar { display: none; }
+.step-tab {
+  flex: 0 0 auto;
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.step-tab.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+.step-tab.done { color: rgba(255,255,255,0.65); }
+.step-tab .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+}
+.step-tab.active .dot { background: var(--gold); }
+.step-tab.done .dot { background: var(--green); }
+
+/* ─── MAIN CONTENT ─── */
+.main {
+  padding: 20px 16px 100px;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+/* ─── CARDS ─── */
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+.card-header {
+  background: var(--navy);
+  color: white;
+  padding: 12px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-header .icon { font-size: 14px; }
+.card-body { padding: 16px; }
+
+/* ─── FORM FIELDS ─── */
+.field-group { margin-bottom: 14px; }
+.field-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 6px;
+  display: block;
+}
+.field-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid var(--gray2);
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none;
+}
+.field-input:focus {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(27,42,74,0.1);
+}
+.field-input.auto-filled {
+  background: var(--gray);
+  color: var(--text2);
+  border-color: var(--gray2);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+}
+.auto-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--green);
+  font-weight: 600;
+  margin-top: 4px;
+  letter-spacing: 0.3px;
+}
+
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ─── SEARCH CLIENT ─── */
+.client-search-wrap { position: relative; }
+.client-results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0; right: 0;
+  background: white;
+  border: 1.5px solid var(--gray2);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  z-index: 50;
+  overflow: hidden;
+  display: none;
+}
+.client-results.show { display: block; }
+.client-result-item {
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gray2);
+  transition: background 0.15s;
+}
+.client-result-item:last-child { border-bottom: none; }
+.client-result-item:hover { background: var(--gray); }
+.cr-name { font-size: 14px; font-weight: 600; }
+.cr-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* ─── STATUS BADGE ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-active { background: var(--green-light); color: var(--green); }
+.badge-disco { background: var(--red-light); color: var(--red); }
+.badge-launch { background: var(--orange-light); color: var(--orange); }
+
+/* ─── PRODUCT ROWS ─── */
+.product-row {
+  border: 1.5px solid var(--gray2);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.product-row.has-disco { border-color: var(--red); }
+.product-row.has-launch { border-color: var(--orange); }
+.product-row-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 10px;
+  cursor: pointer;
+  background: white;
+}
+.product-row-header:active { background: var(--gray); }
+.prod-num {
+  width: 24px; height: 24px;
+  background: var(--navy);
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.prod-info { flex: 1; min-width: 0; }
+.prod-code {
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--navy);
+}
+.prod-desc {
+  font-size: 12px;
+  color: var(--text2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.prod-qty-control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.qty-btn {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.qty-btn.minus { background: var(--gray2); color: var(--text2); }
+.qty-btn.plus { background: var(--navy); color: white; }
+.qty-btn:active { opacity: 0.7; }
+.qty-value {
+  width: 32px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.product-row-detail {
+  display: none;
+  padding: 0 12px 12px;
+  background: var(--gray);
+  border-top: 1px solid var(--gray2);
+}
+.product-row-detail.open { display: block; }
+.prod-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.prod-detail-item label {
+  font-size: 10px;
+  color: var(--text2);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 3px;
+}
+.prod-detail-item span {
+  font-size: 13px;
+  font-weight: 500;
+}
+.photo-mini-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--gray2);
+  border-radius: 8px;
+  background: white;
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ─── CAMERA SECTION ─── */
+.camera-zone {
+  background: var(--navy);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+  position: relative;
+}
+#videoEl {
+  width: 100%;
+  display: block;
+  max-height: 280px;
+  object-fit: cover;
+  background: #000;
+}
+.camera-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(27,42,74,0.92);
+  gap: 12px;
+}
+.camera-icon { font-size: 48px; }
+.camera-start-btn {
+  background: var(--gold);
+  color: var(--navy);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.camera-controls {
+  padding: 12px 16px;
+  background: #0f1c33;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.cam-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 10px;
+  border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.cam-btn.primary { background: var(--gold); color: var(--navy); }
+.cam-btn.secondary { background: rgba(255,255,255,0.1); color: white; }
+.cam-btn:active { opacity: 0.75; transform: scale(0.97); }
+
+.thumbnails-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 10px 16px;
+  background: #0f1c33;
+  scrollbar-width: none;
+}
+.thumbnails-row::-webkit-scrollbar { display: none; }
+.thumb-item {
+  flex: 0 0 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.2);
+  position: relative;
+}
+.thumb-item img { width: 100%; height: 100%; object-fit: cover; }
+.thumb-del {
+  position: absolute;
+  top: 2px; right: 2px;
+  width: 16px; height: 16px;
+  background: var(--red);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+/* ─── COMPETITION CHECKLIST ─── */
+.comp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.comp-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--gray2);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.comp-item.checked {
+  border-color: var(--red);
+  background: var(--red-light);
+}
+.comp-checkbox {
+  width: 20px; height: 20px;
+  border: 2px solid var(--gray2);
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+.comp-item.checked .comp-checkbox {
+  background: var(--red);
+  border-color: var(--red);
+  color: white;
+}
+.comp-name { font-size: 13px; font-weight: 600; }
+
+/* ─── EXHIBIDORES ─── */
+.exh-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1.5px solid var(--gray2);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.exh-info { flex: 1; }
+.exh-code { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--navy); }
+.exh-desc { font-size: 13px; font-weight: 500; }
+.exh-type { font-size: 11px; color: var(--text2); }
+
+/* ─── ALERT BANNERS ─── */
+.alert-banner {
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.alert-banner.disco { background: var(--red-light); border-left: 3px solid var(--red); }
+.alert-banner.launch { background: var(--orange-light); border-left: 3px solid var(--orange); }
+.alert-banner .icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert-banner .content { flex: 1; }
+.alert-banner .title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.alert-banner .detail { font-size: 11px; color: var(--text2); }
+
+/* ─── BOTTOM ACTION BAR ─── */
+.bottom-bar {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 1px solid var(--gray2);
+  padding: 12px 16px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex;
+  gap: 10px;
+  box-shadow: 0 -4px 20px rgba(27,42,74,0.1);
+  z-index: 99;
+  max-width: 540px;
+  margin: 0 auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.btn-back {
+  padding: 13px 18px;
+  border: 1.5px solid var(--gray2);
+  border-radius: 12px;
+  background: white;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-next {
+  flex: 1;
+  padding: 13px;
+  background: var(--navy);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn-next:active { background: var(--navy-light); }
+.btn-finish {
+  flex: 1;
+  padding: 13px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ─── SUMMARY / FINISH ─── */
+.summary-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.kpi-card {
+  background: white;
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.kpi-num { font-size: 24px; font-weight: 700; color: var(--navy); }
+.kpi-label { font-size: 10px; color: var(--text2); font-weight: 600; text-transform: uppercase; margin-top: 3px; }
+
+.export-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+.export-btn {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--gray2);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+}
+.export-btn .eicon { font-size: 24px; }
+.export-btn .elabel { font-size: 12px; font-weight: 600; color: var(--text); }
+.export-btn .esub { font-size: 10px; color: var(--text2); }
+.export-btn:active { background: var(--gray); }
+
+/* ─── SECTION HIDDEN ─── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ─── TOAST ─── */
+.toast {
+  position: fixed;
+  top: 80px; left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--navy);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0;
+  transition: all 0.3s;
+  z-index: 999;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Canvas (hidden) */
+#snapCanvas { display: none; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="app-header">
+  <div class="header-top">
+    <div class="logo-area">
+      <div class="logo-badge">FV</div>
+      <div>
+        <div class="app-title">Auditoría de PdV</div>
+        <div class="app-subtitle">FV Grifería — Sistema de captura</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.45);font-family:'DM Mono',monospace;" id="headerDate"></div>
+  </div>
+  <div class="progress-bar-outer">
+    <div class="progress-bar-inner" id="progressBar" style="width:20%"></div>
+  </div>
+  <div class="steps-nav" id="stepsNav">
+    <div class="step-tab active" onclick="goTo(0)"><span class="dot"></span>PdV</div>
+    <div class="step-tab" onclick="goTo(1)"><span class="dot"></span>Grifería</div>
+    <div class="step-tab" onclick="goTo(2)"><span class="dot"></span>Exhibidores</div>
+    <div class="step-tab" onclick="goTo(3)"><span class="dot"></span>Cámara</div>
+    <div class="step-tab" onclick="goTo(4)"><span class="dot"></span>Competencia</div>
+    <div class="step-tab" onclick="goTo(5)"><span class="dot"></span>Resumen</div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- CANVAS (hidden, for photo capture) -->
+<canvas id="snapCanvas"></canvas>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- ═══ STEP 0: DATOS DEL PdV ═══ -->
+  <div class="section active" id="sec0">
+    <div class="card">
+      <div class="card-header"><span class="icon">🏪</span>Datos del Punto de Venta</div>
+      <div class="card-body">
+        <div class="field-group">
+          <label class="field-label">N° de Cliente</label>
+          <div class="client-search-wrap">
+            <input type="number" class="field-input" id="clientNum" placeholder="Ej: 121" inputmode="numeric" oninput="searchClient(this.value)">
+            <div class="client-results" id="clientResults"></div>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Razón Social</label>
+          <input type="text" class="field-input auto-filled" id="razonSocial" placeholder="Se completa automáticamente" readonly>
+          <div class="auto-tag" id="tagRS" style="display:none">✓ Autocompletado desde base de datos</div>
+        </div>
+        <div class="row-2">
+          <div class="field-group">
+            <label class="field-label">Nombre Fantasía</label>
+            <input type="text" class="field-input auto-filled" id="nombreFantasia" placeholder="—" readonly>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Zona</label>
+            <input type="text" class="field-input auto-filled" id="zona" placeholder="—" readonly>
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Dirección</label>
+          <input type="text" class="field-input auto-filled" id="direccion" placeholder="—" readonly>
+        </div>
+        <div class="row-2">
+          <div class="field-group">
+            <label class="field-label">Vendedor/a</label>
+            <input type="text" class="field-input auto-filled" id="vendedor" placeholder="—" readonly>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Promotor/a</label>
+            <input type="text" class="field-input" id="promotor" placeholder="Tu nombre">
+          </div>
+        </div>
+        <div class="row-2">
+          <div class="field-group">
+            <label class="field-label">Fecha</label>
+            <input type="date" class="field-input" id="fecha">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Hora</label>
+            <input type="time" class="field-input" id="hora">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 1: GRIFERÍA ═══ -->
+  <div class="section" id="sec1">
+    <div id="alertsZone"></div>
+    <div class="card">
+      <div class="card-header"><span class="icon">🚿</span>Grifería en Exhibición</div>
+      <div class="card-body" style="padding:12px;">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px;">Ajustá la cantidad exhibida de cada artículo. Tocá una fila para ver más detalles.</p>
+        <div id="productList"></div>
+        <div style="border-top:1px solid var(--gray2);padding-top:12px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;font-weight:600;color:var(--text2);">VALOR TOTAL EXHIBICIÓN</span>
+          <span style="font-size:18px;font-weight:700;color:var(--navy);" id="totalValue">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 2: EXHIBIDORES ═══ -->
+  <div class="section" id="sec2">
+    <div class="card">
+      <div class="card-header"><span class="icon">🗂️</span>Módulos de Exhibición</div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">Registrá la cantidad de cada módulo presente en el local.</p>
+        <div id="exhibList"></div>
+        <div style="border-top:1px solid var(--gray2);padding-top:12px;margin-top:4px;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-size:12px;font-weight:600;color:var(--text2);">VALOR TOTAL MÓDULOS</span>
+          <span style="font-size:18px;font-weight:700;color:var(--navy);" id="totalExhib">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 3: CÁMARA ═══ -->
+  <div class="section" id="sec3">
+    <div class="camera-zone" id="cameraZone">
+      <video id="videoEl" autoplay playsinline muted></video>
+      <div class="camera-overlay" id="cameraOverlay">
+        <div class="camera-icon">📷</div>
+        <div style="color:rgba(255,255,255,0.8);font-size:13px;text-align:center;padding:0 20px;">Activá la cámara para fotografiar la exhibición</div>
+        <button class="camera-start-btn" onclick="startCamera()">📸 Abrir Cámara</button>
+      </div>
+    </div>
+    <div id="cameraControls" style="display:none">
+      <div class="camera-controls">
+        <button class="cam-btn secondary" onclick="switchCamera()">🔄 Cambiar</button>
+        <button class="cam-btn primary" onclick="takePhoto()">📸 Capturar</button>
+        <button class="cam-btn secondary" onclick="stopCamera()">✕ Cerrar</button>
+      </div>
+      <div class="thumbnails-row" id="thumbRow">
+        <div style="color:rgba(255,255,255,0.4);font-size:12px;padding:20px 4px;white-space:nowrap;">Sin fotos aún</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">📁</span>Carpeta de destino (SharePoint)</div>
+      <div class="card-body">
+        <div style="background:var(--gray);border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);word-break:break-all;" id="sharePointPath">
+          /FV-Griferia/Auditorias/—/
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px;">Las fotos se guardan en la carpeta del cliente organizada por fecha.</p>
+        <div style="margin-top:12px;">
+          <label class="field-label">Video / Recorrido (opcional)</label>
+          <button class="photo-mini-btn" onclick="startVideo()">🎥 Grabar video de la exhibición</button>
+        </div>
+        <div style="margin-top:10px;">
+          <label class="field-label">Fotos adicionales capturadas</label>
+          <div style="font-size:20px;font-weight:700;color:var(--navy);" id="photoCount">0 fotos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 4: COMPETENCIA ═══ -->
+  <div class="section" id="sec4">
+    <div class="card">
+      <div class="card-header"><span class="icon">🏁</span>Presencia de Competencia</div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">Marcá las marcas presentes en el local:</p>
+        <div class="comp-grid" id="compGrid"></div>
+        <div class="field-group" style="margin-top:12px;">
+          <label class="field-label">Otras marcas (texto libre)</label>
+          <input type="text" class="field-input" id="otrasComp" placeholder="Ej: Marca X, Marca Y...">
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">📝</span>Observaciones Generales</div>
+      <div class="card-body">
+        <div class="field-group">
+          <label class="field-label">Estado general de la exhibición</label>
+          <select class="field-input" id="estadoExhib">
+            <option value="">Seleccioná...</option>
+            <option value="Excelente">✅ Excelente</option>
+            <option value="Bueno">👍 Bueno</option>
+            <option value="Regular">⚠️ Regular — necesita mejoras</option>
+            <option value="Deficiente">❌ Deficiente</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Observaciones / Próximas acciones</label>
+          <textarea class="field-input" id="observaciones" rows="3" placeholder="Ej: Falta reponer H6, exhibidor roto en sector derecho..." style="resize:none;font-family:'DM Sans',sans-serif;"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STEP 5: RESUMEN Y EXPORTAR ═══ -->
+  <div class="section" id="sec5">
+    <div class="card">
+      <div class="card-header"><span class="icon">✅</span>Resumen de la Auditoría</div>
+      <div class="card-body" style="padding:14px 12px;">
+        <div id="summaryClientInfo" style="margin-bottom:14px;padding:10px 12px;background:var(--gray);border-radius:10px;"></div>
+        <div class="summary-kpi-row" id="summaryKpis"></div>
+        <div id="summaryAlerts"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">📤</span>Exportar y Guardar</div>
+      <div class="card-body">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;">Elegí cómo guardar los datos de esta auditoría:</p>
+        <div class="export-options">
+          <button class="export-btn" onclick="exportCSV()">
+            <span class="eicon">📊</span>
+            <span class="elabel">Exportar CSV</span>
+            <span class="esub">Para importar al Excel central</span>
+          </button>
+          <button class="export-btn" onclick="exportJSON()">
+            <span class="eicon">💾</span>
+            <span class="elabel">Guardar JSON</span>
+            <span class="esub">Copia de respaldo</span>
+          </button>
+          <button class="export-btn" onclick="printChecklist()">
+            <span class="eicon">🖨️</span>
+            <span class="elabel">Imprimir / PDF</span>
+            <span class="esub">Versión imprimible</span>
+          </button>
+          <button class="export-btn" onclick="shareWhatsApp()">
+            <span class="eicon">💬</span>
+            <span class="elabel">Compartir</span>
+            <span class="esub">Enviar resumen</span>
+          </button>
+        </div>
+        <div style="margin-top:14px;padding:12px;background:var(--green-light);border-radius:10px;border-left:3px solid var(--green);">
+          <div style="font-size:12px;font-weight:700;color:var(--green);">📁 SharePoint</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px;" id="summaryPath">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- BOTTOM BAR -->
+<div class="bottom-bar" id="bottomBar">
+  <button class="btn-back" id="btnBack" onclick="prevStep()" style="display:none">← Atrás</button>
+  <button class="btn-next" id="btnNext" onclick="nextStep()">Continuar →</button>
+</div>
+
+<script>
+// ─── DATA ─────────────────────────────────────────────────────────────────
+const CLIENTS = [
+  {num:101, razon:"Sanitarios Pacífico", fantasia:"Sanitarios Pacífico", dir:"Av. Corrientes 1234", zona:"CABA - Centro", vendedor:"García Juan", estado:"ACTIVO"},
+  {num:121, razon:"Grupo Illia", fantasia:"Sanitarios Illia", dir:"Presidente Illia 416", zona:"Bs As - Villa Sarmiento", vendedor:"S/vendedor", estado:"ACTIVO"},
+  {num:135, razon:"Baños & Diseño SRL", fantasia:"Baños & Diseño", dir:"San Martín 890", zona:"GBA - Quilmes", vendedor:"Rodríguez M.", estado:"ACTIVO"},
+  {num:148, razon:"Casa del Baño SA", fantasia:"Casa del Baño", dir:"Belgrano 456", zona:"GBA - Lomas", vendedor:"López Ana", estado:"ACTIVO"},
+  {num:162, razon:"Sanitarios del Norte", fantasia:"Sanitarios Norte", dir:"Av. Colón 789", zona:"Córdoba - Centro", vendedor:"Martínez P.", estado:"INACTIVO"},
+];
+
+const PRODUCTS = [
+  {cod:"0103/H4", desc:"Monocomando lavatorio H4", linea:"Classic", color:"CR", estado:"ACTIVO", costo:42000, lanzamiento:false},
+  {cod:"0207/H4", desc:"Monocomando bidet H4", linea:"Classic", color:"CR", estado:"ACTIVO", costo:39000, lanzamiento:false},
+  {cod:"0103/85", desc:"Monocomando lavatorio 85", linea:"Minimal", color:"CR", estado:"ACTIVO", costo:46000, lanzamiento:false},
+  {cod:"0207/85", desc:"Monocomando bidet 85", linea:"Minimal", color:"CR", estado:"ACTIVO", costo:44000, lanzamiento:false},
+  {cod:"0103/L2", desc:"Monocomando lavatorio L2", linea:"Lux", color:"CR", estado:"ACTIVO", costo:55000, lanzamiento:false},
+  {cod:"0207/L2", desc:"Monocomando bidet L2", linea:"Lux", color:"CR", estado:"ACTIVO", costo:52500, lanzamiento:false},
+  {cod:"0103/39", desc:"Monocomando lavatorio 39", linea:"Neo", color:"CR", estado:"ACTIVO", costo:47500, lanzamiento:true},
+  {cod:"0207/39", desc:"Monocomando bidet 39", linea:"Neo", color:"CR", estado:"ACTIVO", costo:45500, lanzamiento:true},
+  {cod:"0103/C3", desc:"Monocomando lavatorio C3", linea:"Cubic", color:"CR", estado:"ACTIVO", costo:44000, lanzamiento:false},
+  {cod:"0207/C3", desc:"Monocomando bidet C3", linea:"Cubic", color:"CR", estado:"ACTIVO", costo:42000, lanzamiento:false},
+  {cod:"0103/N2", desc:"Monocomando lavatorio N2", linea:"Nord", color:"CR", estado:"ACTIVO", costo:46500, lanzamiento:false},
+  {cod:"0207/N2", desc:"Monocomando bidet N2", linea:"Nord", color:"CR", estado:"ACTIVO", costo:44500, lanzamiento:false},
+  {cod:"0103/D7", desc:"Monocomando lavatorio D7", linea:"Delta", color:"CR", estado:"DISCONTINUO", costo:35000, lanzamiento:false},
+  {cod:"0207/D7", desc:"Monocomando bidet D7", linea:"Delta", color:"CR", estado:"DISCONTINUO", costo:33500, lanzamiento:false},
+  {cod:"0103/C7", desc:"Monocomando lavatorio C7", linea:"Clasic 7", color:"CR", estado:"DISCONTINUO", costo:32500, lanzamiento:false},
+  {cod:"0207/C7", desc:"Monocomando bidet C7", linea:"Clasic 7", color:"CR", estado:"DISCONTINUO", costo:31000, lanzamiento:false},
+  {cod:"0103/B6", desc:"Monocomando lavatorio B6", linea:"Base 6", color:"CR", estado:"ACTIVO", costo:41000, lanzamiento:false},
+  {cod:"0207/B6", desc:"Monocomando bidet B6", linea:"Base 6", color:"CR", estado:"ACTIVO", costo:39000, lanzamiento:false},
+  {cod:"0103/M3", desc:"Monocomando lavatorio M3", linea:"Moderno", color:"CR", estado:"ACTIVO", costo:48000, lanzamiento:false},
+  {cod:"0207/M3", desc:"Monocomando bidet M3", linea:"Moderno", color:"CR", estado:"ACTIVO", costo:46000, lanzamiento:false},
+  {cod:"0103/H6", desc:"Monocomando lavatorio H6", linea:"Hex", color:"CR", estado:"ACTIVO", costo:49500, lanzamiento:true},
+  {cod:"0207/H6", desc:"Monocomando bidet H6", linea:"Hex", color:"CR", estado:"ACTIVO", costo:47500, lanzamiento:true},
+];
+
+const EXHIBIDORES = [
+  {cod:"MOD-A1", desc:"Módulo torre individual", tipo:"Torre", costo:85000, estado:"ACTIVO"},
+  {cod:"MOD-A2", desc:"Módulo torre doble", tipo:"Torre", costo:150000, estado:"ACTIVO"},
+  {cod:"MOD-B1", desc:"Panel mural estándar", tipo:"Mural", costo:70000, estado:"ACTIVO"},
+  {cod:"MOD-B2", desc:"Panel mural grande", tipo:"Mural", costo:120000, estado:"ACTIVO"},
+  {cod:"MOD-C1", desc:"Isla central pequeña", tipo:"Isla", costo:200000, estado:"ACTIVO"},
+  {cod:"MOD-C2", desc:"Isla central grande", tipo:"Isla", costo:350000, estado:"ACTIVO"},
+  {cod:"MOD-D1", desc:"Exhibidor de mostrador", tipo:"Mostrador", costo:45000, estado:"ACTIVO"},
+  {cod:"MOD-E1", desc:"Módulo antiguo tipo A", tipo:"Torre", costo:60000, estado:"DISCONTINUO"},
+];
+
+const COMPETITORS = ["PEIRANO","PIAZZA","AQUALAF","ROCA","VASSER","HIDROMET","ANDES","GENEBRE","ESTALGRI","HYDROS","H&D","HANSGROHE","CHINO"];
+
+// ─── STATE ────────────────────────────────────────────────────────────────
+let state = { currentStep: 0, client: null, productQtys: {}, exhibQtys: {}, competitors: new Set(), photos: [], videoStream: null, facingMode: 'environment' };
+const STEPS = 6;
+const progPct = [20, 37, 54, 71, 87, 100];
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+document.getElementById('headerDate').textContent = new Date().toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'});
+const today = new Date().toISOString().split('T')[0];
+const now = new Date().toTimeString().slice(0,5);
+document.getElementById('fecha').value = today;
+document.getElementById('hora').value = now;
+
+buildProductList();
+buildExhibList();
+buildCompGrid();
+
+function buildProductList() {
+  const el = document.getElementById('productList');
+  el.innerHTML = '';
+  PRODUCTS.forEach((p, i) => {
+    state.productQtys[p.cod] = state.productQtys[p.cod] || 0;
+    const isDisco = p.estado === 'DISCONTINUO';
+    const isLaunch = p.lanzamiento;
+    const div = document.createElement('div');
+    div.className = `product-row${isDisco?' has-disco':isLaunch?' has-launch':''}`;
+    div.id = `prow_${i}`;
+    div.innerHTML = `
+      <div class="product-row-header" onclick="toggleProd(${i})">
+        <div class="prod-num">${i+1}</div>
+        <div class="prod-info">
+          <div class="prod-code">${p.cod} <span style="color:var(--text2);font-size:10px">· ${p.color}</span>${isDisco?'<span class="badge badge-disco" style="margin-left:4px;padding:1px 6px;font-size:9px">DISC.</span>':''}${isLaunch?'<span class="badge badge-launch" style="margin-left:4px;padding:1px 6px;font-size:9px">🆕</span>':''}</div>
+          <div class="prod-desc">${p.desc}</div>
+        </div>
+        <div class="prod-qty-control" onclick="event.stopPropagation()">
+          <button class="qty-btn minus" onclick="changeQty('${p.cod}',${i},-1)">−</button>
+          <span class="qty-value" id="qty_${i}">0</span>
+          <button class="qty-btn plus" onclick="changeQty('${p.cod}',${i},1)">+</button>
+        </div>
+      </div>
+      <div class="product-row-detail" id="pdet_${i}">
+        <div class="prod-detail-grid">
+          <div class="prod-detail-item"><label>Línea</label><span>${p.linea}</span></div>
+          <div class="prod-detail-item"><label>Estado</label><span class="badge ${isDisco?'badge-disco':'badge-active'}">${p.estado}</span></div>
+          <div class="prod-detail-item"><label>Costo unitario</label><span>$${p.costo.toLocaleString('es-AR')}</span></div>
+          <div class="prod-detail-item"><label>Subtotal</label><span id="sub_${i}">$0</span></div>
+        </div>
+        <button class="photo-mini-btn" onclick="openCameraFor('${p.cod}')">📷 Foto de este producto</button>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function buildExhibList() {
+  const el = document.getElementById('exhibList');
+  el.innerHTML = '';
+  EXHIBIDORES.forEach((ex, i) => {
+    state.exhibQtys[ex.cod] = state.exhibQtys[ex.cod] || 0;
+    const isDisco = ex.estado === 'DISCONTINUO';
+    const div = document.createElement('div');
+    div.className = 'exh-row';
+    div.innerHTML = `
+      <div class="exh-info">
+        <div class="exh-code">${ex.cod}${isDisco?'  <span class="badge badge-disco" style="font-size:9px">DISCONTINUO</span>':''}</div>
+        <div class="exh-desc">${ex.desc}</div>
+        <div class="exh-type">${ex.tipo} · $${ex.costo.toLocaleString('es-AR')}/u</div>
+      </div>
+      <div class="prod-qty-control">
+        <button class="qty-btn minus" onclick="changeExhib('${ex.cod}',${i},-1)">−</button>
+        <span class="qty-value" id="exqty_${i}">0</span>
+        <button class="qty-btn plus" onclick="changeExhib('${ex.cod}',${i},1)">+</button>
+      </div>`;
+    el.appendChild(div);
+  });
+}
+
+function buildCompGrid() {
+  const el = document.getElementById('compGrid');
+  el.innerHTML = '';
+  COMPETITORS.forEach(c => {
+    const div = document.createElement('div');
+    div.className = 'comp-item';
+    div.id = `comp_${c}`;
+    div.innerHTML = `<div class="comp-checkbox" id="chk_${c}"></div><div class="comp-name">${c}</div>`;
+    div.onclick = () => toggleComp(c);
+    el.appendChild(div);
+  });
+}
+
+// ─── NAVIGATION ───────────────────────────────────────────────────────────
+function goTo(step) {
+  if (step > 0 && !state.client) { showToast('⚠️ Primero completá los datos del PdV'); return; }
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(`sec${step}`).classList.add('active');
+  document.querySelectorAll('.step-tab').forEach((t,i) => {
+    t.classList.toggle('active', i===step);
+    if(i < step) t.classList.add('done'); else t.classList.remove('done');
+  });
+  document.getElementById('progressBar').style.width = progPct[step]+'%';
+  document.getElementById('btnBack').style.display = step > 0 ? 'block' : 'none';
+  document.getElementById('btnNext').textContent = step < STEPS-1 ? 'Continuar →' : '';
+  document.getElementById('btnNext').style.display = step < STEPS-1 ? 'flex' : 'none';
+  if (step === STEPS-1) buildSummary();
+  if (step === 1) buildAlerts();
+  state.currentStep = step;
+  window.scrollTo(0,0);
+}
+function nextStep() { goTo(Math.min(state.currentStep+1, STEPS-1)); }
+function prevStep() { goTo(Math.max(state.currentStep-1, 0)); }
+
+// ─── CLIENT SEARCH ────────────────────────────────────────────────────────
+function searchClient(val) {
+  const res = document.getElementById('clientResults');
+  if (!val || val.length < 1) { res.classList.remove('show'); return; }
+  const matches = CLIENTS.filter(c => String(c.num).startsWith(val) || c.razon.toLowerCase().includes(val.toLowerCase()));
+  if (!matches.length) { res.classList.remove('show'); return; }
+  res.innerHTML = matches.map(c => `
+    <div class="client-result-item" onclick="selectClient(${c.num})">
+      <div class="cr-name">${c.razon}</div>
+      <div class="cr-meta">N° ${c.num} · ${c.zona} · ${c.vendedor}</div>
+    </div>`).join('');
+  res.classList.add('show');
+}
+function selectClient(num) {
+  const c = CLIENTS.find(x => x.num===num);
+  if (!c) return;
+  state.client = c;
+  document.getElementById('clientNum').value = c.num;
+  document.getElementById('razonSocial').value = c.razon;
+  document.getElementById('nombreFantasia').value = c.fantasia;
+  document.getElementById('zona').value = c.zona;
+  document.getElementById('direccion').value = c.dir;
+  document.getElementById('vendedor').value = c.vendedor;
+  document.getElementById('tagRS').style.display = 'flex';
+  document.getElementById('clientResults').classList.remove('show');
+  const dateStr = document.getElementById('fecha').value.replace(/-/g,'');
+  document.getElementById('sharePointPath').textContent = `/FV-Griferia/Auditorias/${c.num}_${c.fantasia.replace(/\s/g,'_')}/${dateStr}/`;
+  showToast(`✓ Cliente cargado: ${c.fantasia}`);
+}
+
+// ─── QUANTITIES ───────────────────────────────────────────────────────────
+function changeQty(cod, idx, delta) {
+  state.productQtys[cod] = Math.max(0, (state.productQtys[cod]||0) + delta);
+  document.getElementById(`qty_${idx}`).textContent = state.productQtys[cod];
+  const p = PRODUCTS[idx];
+  document.getElementById(`sub_${idx}`).textContent = '$'+((state.productQtys[cod]*p.costo)||0).toLocaleString('es-AR');
+  updateTotal();
+}
+function changeExhib(cod, idx, delta) {
+  state.exhibQtys[cod] = Math.max(0, (state.exhibQtys[cod]||0) + delta);
+  document.getElementById(`exqty_${idx}`).textContent = state.exhibQtys[cod];
+  updateExhibTotal();
+}
+function updateTotal() {
+  let total = 0;
+  PRODUCTS.forEach(p => { total += (state.productQtys[p.cod]||0)*p.costo; });
+  document.getElementById('totalValue').textContent = '$'+total.toLocaleString('es-AR');
+}
+function updateExhibTotal() {
+  let total = 0;
+  EXHIBIDORES.forEach(ex => { total += (state.exhibQtys[ex.cod]||0)*ex.costo; });
+  document.getElementById('totalExhib').textContent = '$'+total.toLocaleString('es-AR');
+}
+function toggleProd(i) {
+  const det = document.getElementById(`pdet_${i}`);
+  det.classList.toggle('open');
+}
+
+// ─── ALERTS ───────────────────────────────────────────────────────────────
+function buildAlerts() {
+  const el = document.getElementById('alertsZone');
+  el.innerHTML = '';
+  const discoExhibidos = PRODUCTS.filter(p => p.estado==='DISCONTINUO' && (state.productQtys[p.cod]||0)>0);
+  if (discoExhibidos.length) {
+    el.innerHTML += `<div class="alert-banner disco"><div class="icon">⚠️</div><div class="content"><div class="title">Productos discontinuos en exhibición</div><div class="detail">${discoExhibidos.map(p=>p.cod).join(', ')} — coordinar retiro con el cliente</div></div></div>`;
+  }
+  const launches = PRODUCTS.filter(p => p.lanzamiento);
+  const sinExhibir = launches.filter(p => !(state.productQtys[p.cod]||0));
+  if (sinExhibir.length) {
+    el.innerHTML += `<div class="alert-banner launch"><div class="icon">🆕</div><div class="content"><div class="title">Lanzamientos sin exhibir</div><div class="detail">${sinExhibir.map(p=>p.cod+' ('+p.linea+')').join(', ')}</div></div></div>`;
+  }
+}
+
+// ─── CAMERA ───────────────────────────────────────────────────────────────
+async function startCamera() {
+  try {
+    state.videoStream = await navigator.mediaDevices.getUserMedia({ video:{ facingMode:state.facingMode, width:{ideal:1280}, height:{ideal:720} }, audio:false });
+    document.getElementById('videoEl').srcObject = state.videoStream;
+    document.getElementById('cameraOverlay').style.display = 'none';
+    document.getElementById('cameraControls').style.display = 'block';
+    showToast('📷 Cámara activa');
+  } catch(e) {
+    showToast('Sin acceso a la cámara — verificá permisos');
+  }
+}
+function stopCamera() {
+  if (state.videoStream) { state.videoStream.getTracks().forEach(t=>t.stop()); state.videoStream=null; }
+  document.getElementById('videoEl').srcObject = null;
+  document.getElementById('cameraOverlay').style.display = 'flex';
+  document.getElementById('cameraControls').style.display = 'none';
+}
+function switchCamera() {
+  state.facingMode = state.facingMode==='environment'?'user':'environment';
+  stopCamera(); startCamera();
+}
+function takePhoto() {
+  const video = document.getElementById('videoEl');
+  const canvas = document.getElementById('snapCanvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+  state.photos.push(dataURL);
+  updateThumbs();
+  showToast('📸 Foto capturada');
+}
+function updateThumbs() {
+  const row = document.getElementById('thumbRow');
+  const count = document.getElementById('photoCount');
+  count.textContent = state.photos.length + ' foto' + (state.photos.length!==1?'s':'');
+  if (!state.photos.length) { row.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:12px;padding:20px 4px;white-space:nowrap;">Sin fotos aún</div>'; return; }
+  row.innerHTML = state.photos.map((d,i) => `<div class="thumb-item"><img src="${d}"><div class="thumb-del" onclick="deletePhoto(${i})">×</div></div>`).join('');
+}
+function deletePhoto(i) { state.photos.splice(i,1); updateThumbs(); }
+function openCameraFor(cod) { goTo(3); showToast(`📷 Fotografiando: ${cod}`); }
+function startVideo() { showToast('🎥 Funcionalidad disponible en la versión con SharePoint'); }
+
+// ─── COMPETITION ──────────────────────────────────────────────────────────
+function toggleComp(name) {
+  const item = document.getElementById(`comp_${name}`);
+  const chk = document.getElementById(`chk_${name}`);
+  if (state.competitors.has(name)) { state.competitors.delete(name); item.classList.remove('checked'); chk.textContent=''; }
+  else { state.competitors.add(name); item.classList.add('checked'); chk.textContent='✓'; }
+}
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────
+function buildSummary() {
+  const c = state.client;
+  if (!c) return;
+  document.getElementById('summaryClientInfo').innerHTML = `<div style="font-size:14px;font-weight:700">${c.razon}</div><div style="font-size:12px;color:var(--text2);margin-top:3px">${c.dir} · ${c.zona}</div><div style="font-size:12px;color:var(--text2)">Vendedor: ${c.vendedor}</div>`;
+  const totalPzas = PRODUCTS.reduce((acc,p)=>acc+(state.productQtys[p.cod]||0),0);
+  const totalVal = PRODUCTS.reduce((acc,p)=>acc+(state.productQtys[p.cod]||0)*p.costo,0);
+  const discoCount = PRODUCTS.filter(p=>p.estado==='DISCONTINUO'&&(state.productQtys[p.cod]||0)>0).length;
+  document.getElementById('summaryKpis').innerHTML = `
+    <div class="kpi-card"><div class="kpi-num">${totalPzas}</div><div class="kpi-label">Piezas</div></div>
+    <div class="kpi-card"><div class="kpi-num">${discoCount}</div><div class="kpi-label" style="color:var(--red)">Disc.</div></div>
+    <div class="kpi-card"><div class="kpi-num">${state.photos.length}</div><div class="kpi-label">Fotos</div></div>`;
+  const dateStr = document.getElementById('fecha').value.replace(/-/g,'');
+  document.getElementById('summaryPath').textContent = `/FV-Griferia/Auditorias/${c.num}_${c.fantasia.replace(/\s/g,'_')}/${dateStr}/`;
+  let alerts = '';
+  if (discoCount) alerts += `<div class="alert-banner disco" style="margin-bottom:8px"><div class="icon">⚠️</div><div class="content"><div class="title">${discoCount} producto(s) discontinuos exhibidos</div></div></div>`;
+  const sinL = PRODUCTS.filter(p=>p.lanzamiento&&!(state.productQtys[p.cod]||0)).length;
+  if (sinL) alerts += `<div class="alert-banner launch"><div class="icon">🆕</div><div class="content"><div class="title">${sinL} lanzamiento(s) sin exhibir</div></div></div>`;
+  document.getElementById('summaryAlerts').innerHTML = alerts;
+  if (state.competitors.size) {
+    document.getElementById('summaryAlerts').innerHTML += `<div style="margin-top:10px;padding:10px 12px;background:var(--gray);border-radius:10px;font-size:12px;"><b>Competencia presente:</b> ${[...state.competitors].join(', ')}</div>`;
+  }
+}
+
+// ─── EXPORT ───────────────────────────────────────────────────────────────
+function getAuditData() {
+  const c = state.client || {};
+  const fecha = document.getElementById('fecha').value;
+  const promotor = document.getElementById('promotor').value;
+  const estado = document.getElementById('estadoExhib').value;
+  const obs = document.getElementById('observaciones').value;
+  return { cliente: c, fecha, promotor, estado, obs,
+    productos: PRODUCTS.map(p=>({...p, cantidad: state.productQtys[p.cod]||0})).filter(p=>p.cantidad>0),
+    exhibidores: EXHIBIDORES.map(ex=>({...ex, cantidad: state.exhibQtys[ex.cod]||0})).filter(ex=>ex.cantidad>0),
+    competencia: [...state.competitors], fotoCount: state.photos.length };
+}
+function exportCSV() {
+  const d = getAuditData();
+  const rows = [['AUDITORIA FV GRIFERÍA'],
+    ['Fecha',d.fecha,'N° Cliente',d.cliente.num,'Razón Social',d.cliente.razon,'Promotor',d.promotor],
+    [''],['GRIFERÍA'],['Código','Descripción','Línea','Color','Estado','Cantidad','Costo Unit.','Total'],
+    ...d.productos.map(p=>[p.cod,p.desc,p.linea,p.color,p.estado,p.cantidad,p.costo,p.cantidad*p.costo]),
+    [''],['EXHIBIDORES'],['Código','Descripción','Tipo','Cantidad','Costo Unit.','Total'],
+    ...d.exhibidores.map(ex=>[ex.cod,ex.desc,ex.tipo,ex.cantidad,ex.costo,ex.cantidad*ex.costo]),
+    [''],['COMPETENCIA'],[...d.competencia].join(', ')];
+  const csv = rows.map(r=>r.join(';')).join('\n');
+  downloadFile(`FV_Auditoria_${d.cliente.num}_${d.fecha}.csv`, csv, 'text/csv');
+  showToast('✅ CSV descargado');
+}
+function exportJSON() {
+  const d = getAuditData();
+  downloadFile(`FV_Auditoria_${d.cliente.num||'XX'}_${d.fecha}.json`, JSON.stringify(d,null,2), 'application/json');
+  showToast('✅ JSON guardado');
+}
+function downloadFile(name, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = name; a.click();
+}
+function printChecklist() { window.print(); }
+function shareWhatsApp() {
+  const d = getAuditData();
+  const txt = `*FV Grifería — Auditoría PdV*\n📅 ${d.fecha}\n🏪 ${d.cliente.razon} (N°${d.cliente.num})\n👤 ${d.promotor}\n\n*Piezas exhibidas:* ${d.productos.reduce((a,p)=>a+p.cantidad,0)}\n*Discontinuos:* ${d.productos.filter(p=>p.estado==='DISCONTINUO').length}\n*Estado exhibición:* ${d.estado||'—'}\n*Competencia:* ${d.competencia.join(', ')||'Ninguna registrada'}`;
+  window.open('https://wa.me/?text='+encodeURIComponent(txt));
+}
+
+// ─── TOAST ────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
