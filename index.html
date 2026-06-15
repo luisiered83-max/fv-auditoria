@@ -192,6 +192,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 .loading-overlay .loading-text{color:white;font-size:14px;font-weight:600}
 .loading-overlay.hidden{display:none}
 
+/* COLOR QTY ROWS */
+.color-qty-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--gray2)}
+.color-qty-row:last-child{border-bottom:none}
+.color-label{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--navy);min-width:48px}
+
 /* FRANZ BADGE */
 .badge-franz{background:#F5E6F0;color:#4A1B2A}
 .franz-row .prod-num{background:#4A1B2A}
@@ -556,7 +561,8 @@ let state = {
   currentStep: 0,
   userRole: 'Promotor/a',
   client: null,
-  productQtys: {},
+  productQtys: {},       // {cod: total} — kept for compatibility
+  colorQtys: {},         // {cod_COLOR: qty} — per color breakdown
   exhibQtys: {},
   competitors: new Set(),
   photos: [],
@@ -706,27 +712,58 @@ function mapSegToKey(seg) {
   return map[seg] || seg;
 }
 
+function parseColors(coloresStr) {
+  if (!coloresStr) return ['CR'];
+  return coloresStr.split('-').map(c => c.trim()).filter(Boolean);
+}
+
+function colorKey(cod, color) {
+  return cod + '||' + color;
+}
+
 function buildProductList() {
   const products = getProductsForClient();
   const el = document.getElementById('productList');
   el.innerHTML = '';
-
-  // Section divider for Franz if client is A
   let lastWasFranz = false;
 
   products.forEach((p, i) => {
-    if (!state.productQtys[p.cod]) state.productQtys[p.cod] = 0;
     const isDisco = p.estado === 'DISCONTINUO';
     const isLaunch = p.lanzamiento;
     const isFranz = p.isFranz === true;
+    const colors = parseColors(p.colores);
 
-    // Insert Franz divider
+    // Init color qtys
+    colors.forEach(col => {
+      const key = colorKey(p.cod, col);
+      if (state.colorQtys[key] === undefined) state.colorQtys[key] = 0;
+    });
+
+    // Franz divider
     if (isFranz && !lastWasFranz) {
-      const div = document.createElement('div');
-      div.innerHTML = '<div style="margin:14px 0 8px;padding:8px 12px;background:#4A1B2A;border-radius:8px;color:white;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase">&#127942; Línea Franz — Exclusivo Clientes A</div>';
-      el.appendChild(div);
+      const divFranz = document.createElement('div');
+      divFranz.innerHTML = '<div style="margin:14px 0 8px;padding:8px 12px;background:#4A1B2A;border-radius:8px;color:white;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase">&#127942; Línea Franz — Exclusivo Clientes A</div>';
+      el.appendChild(divFranz);
     }
     lastWasFranz = isFranz;
+
+    // Build color rows HTML
+    const colorRowsHTML = colors.map(col => {
+      const key = colorKey(p.cod, col);
+      const qty = state.colorQtys[key] || 0;
+      return `
+        <div class="color-qty-row" id="crow_${i}_${col.replace(/[^a-zA-Z0-9]/g,'_')}">
+          <span class="color-label">${col}</span>
+          <div class="prod-qty-control">
+            <button class="qty-btn minus" onclick="changeColorQty('${p.cod}','${col}',${i},-1)">−</button>
+            <span class="qty-value" id="cqty_${i}_${col.replace(/[^a-zA-Z0-9]/g,'_')}">${qty}</span>
+            <button class="qty-btn plus" onclick="changeColorQty('${p.cod}','${col}',${i},1)">+</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    const totalProd = colors.reduce((a, col) => a + (state.colorQtys[colorKey(p.cod, col)] || 0), 0);
+
     const div = document.createElement('div');
     div.className = `product-row${isDisco ? ' has-disco' : isLaunch ? ' has-launch' : ''}${isFranz ? ' franz-row' : ''}`;
     div.id = `prow_${i}`;
@@ -736,26 +773,26 @@ function buildProductList() {
         <div class="prod-info">
           <div class="prod-code">${p.cod}
             ${isDisco ? '<span class="badge badge-disco" style="font-size:9px;margin-left:4px">DISC.</span>' : ''}
-            ${isLaunch ? '<span class="badge badge-launch" style="font-size:9px;margin-left:4px">🆕</span>' : ''}
-            ${isFranz ? '<span class="badge badge-franz" style="font-size:9px;margin-left:4px">🏆</span>' : ''}
+            ${isLaunch ? '<span class="badge badge-launch" style="font-size:9px;margin-left:4px">&#127378;</span>' : ''}
+            ${isFranz ? '<span class="badge badge-franz" style="font-size:9px;margin-left:4px">&#127942;</span>' : ''}
           </div>
-          <div class="prod-desc">${p.desc} · ${p.linea}</div>
+          <div class="prod-desc">${p.desc} &middot; ${p.linea}</div>
         </div>
-        <div class="prod-qty-control" onclick="event.stopPropagation()">
-          <button class="qty-btn minus" onclick="changeQty('${p.cod}',${i},-1)">−</button>
-          <span class="qty-value" id="qty_${i}">0</span>
-          <button class="qty-btn plus" onclick="changeQty('${p.cod}',${i},1)">+</button>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span style="font-size:13px;font-weight:700;color:var(--navy)" id="ptotal_${i}">${totalProd > 0 ? totalProd + ' u.' : ''}</span>
+          <span style="font-size:18px;color:var(--text2)">${totalProd > 0 ? '&#9660;' : '&#9658;'}</span>
         </div>
       </div>
-      <div class="product-row-detail" id="pdet_${i}">
-        <div class="prod-detail-grid">
-          <div class="prod-detail-item"><label>Línea</label><span>${p.linea}</span></div>
-          <div class="prod-detail-item"><label>Colores</label><span>${p.colores}</span></div>
-          <div class="prod-detail-item"><label>Estado</label><span class="badge ${isDisco ? 'badge-disco' : 'badge-active'}">${p.estado}</span></div>
-          <div class="prod-detail-item"><label>Costo</label><span>$${p.costo.toLocaleString('es-AR')}</span></div>
-          ${isDisco && p.reemplazaPor ? `<div class="prod-detail-item" style="grid-column:span 2"><label>Reemplazar por</label><span style="color:var(--green);font-weight:600">${p.reemplazaPor}</span></div>` : ''}
-          <div class="prod-detail-item"><label>Subtotal</label><span id="sub_${i}">$0</span></div>
+      <div class="product-row-detail${totalProd > 0 ? ' open' : ''}" id="pdet_${i}">
+        <div style="padding:10px 12px 4px;font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px">Cantidad por color:</div>
+        <div style="padding:0 12px 8px">
+          ${colorRowsHTML}
         </div>
+        <div style="padding:4px 12px 12px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--gray2);margin-top:4px">
+          <span style="font-size:11px;font-weight:600;color:var(--text2)">Costo unitario: $${p.costo.toLocaleString('es-AR')}</span>
+          <span style="font-size:12px;font-weight:700;color:var(--navy)" id="sub_${i}">$${(totalProd * p.costo).toLocaleString('es-AR')}</span>
+        </div>
+        ${isDisco && p.reemplazaPor ? `<div style="padding:8px 12px;background:var(--red-light);font-size:11px;color:var(--red)"><b>Reemplazar por:</b> ${p.reemplazaPor}</div>` : ''}
       </div>`;
     el.appendChild(div);
   });
@@ -765,17 +802,35 @@ function toggleProd(i) {
   document.getElementById(`pdet_${i}`).classList.toggle('open');
 }
 
-function changeQty(cod, idx, delta) {
-  state.productQtys[cod] = Math.max(0, (state.productQtys[cod] || 0) + delta);
-  document.getElementById(`qty_${idx}`).textContent = state.productQtys[cod];
-  const p = DB.products[idx];
-  document.getElementById(`sub_${idx}`).textContent = '$' + ((state.productQtys[cod] * p.costo) || 0).toLocaleString('es-AR');
+function changeColorQty(cod, color, idx, delta) {
+  const key = colorKey(cod, color);
+  state.colorQtys[key] = Math.max(0, (state.colorQtys[key] || 0) + delta);
+  const safeCol = color.replace(/[^a-zA-Z0-9]/g, '_');
+  document.getElementById('cqty_' + idx + '_' + safeCol).textContent = state.colorQtys[key];
+  // Update product total
+  const products = getProductsForClient();
+  const p = products[idx];
+  const colors = parseColors(p.colores);
+  const total = colors.reduce((a, col) => a + (state.colorQtys[colorKey(cod, col)] || 0), 0);
+  state.productQtys[cod] = total;
+  const totalEl = document.getElementById('ptotal_' + idx);
+  if (totalEl) totalEl.textContent = total > 0 ? total + ' u.' : '';
+  const subEl = document.getElementById('sub_' + idx);
+  if (subEl) subEl.textContent = '$' + (total * p.costo).toLocaleString('es-AR');
   updateTotal();
+}
+
+function changeQty(cod, idx, delta) {
+  // kept for compatibility
 }
 
 function updateTotal() {
   let total = 0;
-  getProductsForClient().forEach(p => { total += (state.productQtys[p.cod] || 0) * p.costo; });
+  getProductsForClient().forEach(p => {
+    const colors = parseColors(p.colores);
+    const qty = colors.reduce((a, col) => a + (state.colorQtys[colorKey(p.cod, col)] || 0), 0);
+    total += qty * p.costo;
+  });
   document.getElementById('totalValue').textContent = '$' + total.toLocaleString('es-AR');
 }
 
@@ -931,7 +986,7 @@ function buildSummary() {
     </div>`;
 
   // KPIs
-  const totalPzas = getProductsForClient().reduce((a, p) => a + (state.productQtys[p.cod] || 0), 0);
+  const totalPzas = Object.values(state.colorQtys).reduce((a, v) => a + v, 0);
   const discoExhibidos = getProductsForClient().filter(p => p.estado === 'DISCONTINUO' && (state.productQtys[p.cod] || 0) > 0);
   document.getElementById('summaryKpis').innerHTML = `
     <div class="kpi-card"><div class="kpi-num">${totalPzas}</div><div class="kpi-label">Piezas</div></div>
@@ -1009,7 +1064,12 @@ function getAuditData() {
   return {
     fecha, hora, userName, userRole: state.userRole, estado, mejoras, obs,
     cliente: c,
-    productos: getProductsForClient().map(p => ({ ...p, cantidad: state.productQtys[p.cod] || 0 })).filter(p => p.cantidad > 0),
+    productos: getProductsForClient().map(p => {
+      const colors = parseColors(p.colores);
+      const colorDetail = colors.map(col => ({color: col, cantidad: state.colorQtys[colorKey(p.cod, col)] || 0})).filter(c => c.cantidad > 0);
+      const total = colorDetail.reduce((a, c) => a + c.cantidad, 0);
+      return {...p, cantidad: total, coloresDetalle: colorDetail};
+    }).filter(p => p.cantidad > 0),
     exhibidores: DB.exhibidores.map(ex => ({ ...ex, cantidad: state.exhibQtys[ex.cod] || 0 })).filter(ex => ex.cantidad > 0),
     competencia: [...state.competitors],
     otrasComp: document.getElementById('otrasComp').value,
