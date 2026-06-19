@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>FV Grifería — Auditoría PdV</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root {
   --navy:#1B2A4A; --navy-light:#243659; --gold:#C8A84B; --gold-light:#E8C870;
@@ -197,6 +198,29 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 .color-qty-row:last-child{border-bottom:none}
 .color-label{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--navy);min-width:48px}
 
+/* SIMPLE LINE CARDS (modo RAPIDO) */
+.simple-line-card{border:1.5px solid var(--gray2);border-radius:14px;margin-bottom:12px;overflow:hidden;transition:border-color 0.2s}
+.simple-line-card.is-disco{border-color:var(--red)}
+.simple-line-card.is-launch{border-color:var(--orange);box-shadow:0 0 0 2px rgba(230,126,34,0.15)}
+.simple-line-card.is-opp{border-color:var(--gold)}
+.simple-card-header{display:flex;align-items:center;padding:10px 14px;gap:10px;cursor:pointer;background:white}
+.simple-card-header:active{background:var(--gray)}
+.simple-card-badge{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:0.5px}
+.simple-card-type{width:28px;height:28px;border-radius:8px;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+.simple-card-info{flex:1;min-width:0}
+.simple-card-name{font-size:13px;font-weight:700;color:var(--navy)}
+.simple-card-sub{font-size:11px;color:var(--text2);margin-top:1px}
+.simple-card-total{font-size:15px;font-weight:700;color:var(--navy);flex-shrink:0}
+.simple-card-image{width:100%;max-height:180px;object-fit:contain;background:var(--gray);display:block}
+.simple-card-image-placeholder{width:100%;height:140px;background:var(--gray);display:flex;align-items:center;justify-content:center;font-size:40px}
+.simple-card-detail{background:var(--gray);border-top:1px solid var(--gray2);padding:12px}
+.simple-card-flags{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.flag-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;border:1.5px solid var(--gray2);cursor:default}
+.flag-badge.active-launch{background:var(--orange-light);border-color:var(--orange);color:var(--orange)}
+.flag-badge.active-opp{background:var(--yellow,#FFF9E6);border-color:#C09010;color:#C09010}
+.image-notice-overlay{position:absolute;top:6px;right:6px;display:flex;gap:4px;flex-direction:column;align-items:flex-end}
+.img-notice{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:0.3px}
+
 /* FRANZ BADGE */
 .badge-franz{background:#F5E6F0;color:#4A1B2A}
 .franz-row .prod-num{background:#4A1B2A}
@@ -233,14 +257,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
   <div class="progress-bar-outer">
     <div class="progress-bar-inner" id="progressBar" style="width:17%"></div>
   </div>
-  <div class="steps-nav" id="stepsNav">
-    <div class="step-tab active" onclick="goTo(0)"><span class="dot"></span>PdV</div>
-    <div class="step-tab" onclick="goTo(1)"><span class="dot"></span>Grifería</div>
-    <div class="step-tab" onclick="goTo(2)"><span class="dot"></span>Exhibidores</div>
-    <div class="step-tab" onclick="goTo(3)"><span class="dot"></span>Cámara</div>
-    <div class="step-tab" onclick="goTo(4)"><span class="dot"></span>Competencia</div>
-    <div class="step-tab" onclick="goTo(5)"><span class="dot"></span>Resumen</div>
-  </div>
+  <div class="steps-nav" id="stepsNav"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -256,12 +273,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 
       <!-- Rol del usuario -->
       <div class="field-group">
-        <label class="field-label">¿Quién realiza el relevamiento?</label>
+        <label class="field-label">Tipo de relevamiento</label>
         <div class="role-selector">
-          <button class="role-btn active" id="role_promotor" onclick="setRole('Promotor/a', this)">🎯 Promotor/a</button>
-          <button class="role-btn" id="role_vendedor" onclick="setRole('Vendedor/a', this)">💼 Vendedor/a</button>
-          <button class="role-btn" id="role_otro" onclick="setRole('Otro/a', this)">👤 Otro/a</button>
+          <button class="role-btn active" id="tipo_rapido" onclick="setAuditType('RAPIDO', this)">⚡ Rápido</button>
+          <button class="role-btn" id="tipo_completo" onclick="setAuditType('COMPLETO', this)">📋 Completo</button>
         </div>
+        <div style="font-size:11px;color:var(--text2);margin-top:6px;padding:0 2px"><b>Rápido:</b> chequeo por línea con imagen &nbsp;·&nbsp; <b>Completo:</b> detalle por código y color</div>
       </div>
 
       <div class="field-group">
@@ -278,7 +295,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
       </div>
 
       <div class="field-group">
-        <label class="field-label">Razón Social</label>
+        <label class="field-label">Nombre de Fantasía</label>
         <input type="text" class="field-input auto-filled" id="razonSocial" placeholder="Se completa automáticamente" readonly>
         <div class="auto-tag" id="tagRS" style="display:none">✓ Autocompletado desde base de datos</div>
       </div>
@@ -321,19 +338,37 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 <!-- ═══ STEP 1: GRIFERÍA ═══ -->
 <div class="section" id="sec1">
   <div id="alertsZone"></div>
-  <div class="card">
-    <div class="card-header"><span>🚿</span>Grifería en Exhibición</div>
-    <div class="card-body" style="padding:12px">
-      <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Ajustá la cantidad exhibida. Tocá una fila para ver detalles.</p>
-      <div id="productList"></div>
-      <div style="border-top:1px solid var(--gray2);padding-top:12px;margin-top:4px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:600;color:var(--text2)">VALOR TOTAL EXHIBICIÓN</span>
-        <span style="font-size:18px;font-weight:700;color:var(--navy)" id="totalValue">$0</span>
+
+  <!-- MODO RÁPIDO: líneas con imagen -->
+  <div id="simpleProductSection" style="display:none">
+    <div class="card">
+      <div class="card-header"><span>⚡</span>Chequeo Rápido — Líneas en Exhibición</div>
+      <div class="card-body" style="padding:12px">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Tocá cada línea para registrar cantidades por color.</p>
+        <div id="simpleProductList"></div>
+        <div style="border-top:1px solid var(--gray2);padding-top:12px;margin-top:4px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">VALOR TOTAL</span>
+          <span style="font-size:18px;font-weight:700;color:var(--navy)" id="totalValueSimple">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODO COMPLETO: detalle por código -->
+  <div id="fullProductSection" style="display:none">
+    <div class="card">
+      <div class="card-header"><span>🚿</span>Grifería en Exhibición</div>
+      <div class="card-body" style="padding:12px">
+        <p style="font-size:12px;color:var(--text2);margin-bottom:12px">Ajustá la cantidad exhibida. Tocá una fila para ver detalles.</p>
+        <div id="productList"></div>
+        <div style="border-top:1px solid var(--gray2);padding-top:12px;margin-top:4px;display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:12px;font-weight:600;color:var(--text2)">VALOR TOTAL EXHIBICIÓN</span>
+          <span style="font-size:18px;font-weight:700;color:var(--navy)" id="totalValue">$0</span>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
 <!-- ═══ STEP 2: EXHIBIDORES ═══ -->
 <div class="section" id="sec2">
   <div class="card">
@@ -465,14 +500,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
       <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Subcarpeta de fotos:</p>
       <div class="sp-box" id="summaryPhotoPath" style="margin-bottom:14px">—</div>
       <div class="export-options">
+        <button class="export-btn" onclick="exportPDF()" style="border-color:var(--navy);background:var(--navy)">
+          <span class="eicon">📄</span><span class="elabel" style="color:white">Exportar PDF</span><span class="esub" style="color:rgba(255,255,255,0.6)">Reporte para SharePoint</span>
+        </button>
         <button class="export-btn" onclick="exportCSV()">
-          <span class="eicon">📊</span><span class="elabel">Exportar planilla</span><span class="esub">CSV para el Excel central</span>
+          <span class="eicon">📊</span><span class="elabel">Exportar CSV</span><span class="esub">Para el Excel central</span>
         </button>
         <button class="export-btn" onclick="exportPhotos()">
-          <span class="eicon">🖼️</span><span class="elabel">Descargar fotos</span><span class="esub">ZIP para subir a SharePoint</span>
-        </button>
-        <button class="export-btn" onclick="exportJSON()">
-          <span class="eicon">💾</span><span class="elabel">Guardar JSON</span><span class="esub">Copia de respaldo</span>
+          <span class="eicon">🖼️</span><span class="elabel">Descargar fotos</span><span class="esub">Para subir a SharePoint</span>
         </button>
         <button class="export-btn" onclick="shareWhatsApp()">
           <span class="eicon">💬</span><span class="elabel">Compartir resumen</span><span class="esub">Enviar por WhatsApp</span>
@@ -559,6 +594,7 @@ let DB = {
 // ── STATE ────────────────────────────────────────────────────────────────
 let state = {
   currentStep: 0,
+  auditType: 'RAPIDO',   // 'RAPIDO' or 'COMPLETO'
   userRole: 'Promotor/a',
   client: null,
   productQtys: {},       // {cod: total} — kept for compatibility
@@ -580,7 +616,7 @@ const progPct = [17, 34, 50, 67, 83, 100];
   document.getElementById('fecha').value = today;
   document.getElementById('hora').value = now;
   document.getElementById('lastUpdated').textContent = 'Actualizado: ' + DB.lastUpdated;
-  buildProductList();
+  updateStepTabs();
   buildExhibList();
   buildCompGrid();
 })();
@@ -610,32 +646,92 @@ async function reloadData() {
 }
 
 // ── ROLE ─────────────────────────────────────────────────────────────────
-function setRole(role, btn) {
-  state.userRole = role;
+function setAuditType(type, btn) {
+  state.auditType = type;
+  state.userRole = type; // keep for backward compat in exports
   document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  updateStepTabs();
+}
+
+function setRole(role, btn) {
+  // kept for compatibility
+  state.userRole = role;
+}
+
+function getStepsForAuditType() {
+  // RAPIDO: PdV(0), Grifería(1), Cámara(2), Competencia(3), Resumen(4)
+  // COMPLETO: PdV(0), Grifería(1), Exhibidores(2), Cámara(3), Competencia(4), Resumen(5)
+  if (state.auditType === 'RAPIDO') {
+    return [
+      {label:'PdV', sec:'sec0'},
+      {label:'Grifería', sec:'sec1'},
+      {label:'Cámara', sec:'sec3'},
+      {label:'Competencia', sec:'sec4'},
+      {label:'Resumen', sec:'sec5'}
+    ];
+  }
+  return [
+    {label:'PdV', sec:'sec0'},
+    {label:'Grifería', sec:'sec1'},
+    {label:'Exhibidores', sec:'sec2'},
+    {label:'Cámara', sec:'sec3'},
+    {label:'Competencia', sec:'sec4'},
+    {label:'Resumen', sec:'sec5'}
+  ];
+}
+
+function updateStepTabs() {
+  const nav = document.getElementById('stepsNav');
+  const steps = getStepsForAuditType();
+  nav.innerHTML = steps.map((s, i) =>
+    `<div class="step-tab${i===0?' active':''}" onclick="goToStep(${i})"><span class="dot"></span>${s.label}</div>`
+  ).join('');
 }
 
 // ── NAVIGATION ────────────────────────────────────────────────────────────
-function goTo(step) {
-  if (step > 0 && !state.client) { showToast('⚠️ Primero completá los datos del PdV'); return; }
+function goTo(secId) {
+  // Legacy: called with a section index from old static tabs
+  const steps = getStepsForAuditType();
+  const idx = steps.findIndex(s => s.sec === 'sec' + secId);
+  if (idx >= 0) goToStep(idx);
+}
+
+function goToStep(stepIdx) {
+  const steps = getStepsForAuditType();
+  if (stepIdx < 0 || stepIdx >= steps.length) return;
+  if (stepIdx > 0 && !state.client) { showToast('⚠️ Primero completá los datos del PdV'); return; }
+
+  // Hide all sections, show the right one
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById('sec' + step).classList.add('active');
+  document.getElementById(steps[stepIdx].sec).classList.add('active');
+
+  // Update tab styles
   document.querySelectorAll('.step-tab').forEach((t, i) => {
-    t.classList.toggle('active', i === step);
-    i < step ? t.classList.add('done') : t.classList.remove('done');
+    t.classList.toggle('active', i === stepIdx);
+    i < stepIdx ? t.classList.add('done') : t.classList.remove('done');
   });
-  document.getElementById('progressBar').style.width = progPct[step] + '%';
-  document.getElementById('btnBack').style.display = step > 0 ? 'block' : 'none';
-  const isLast = step === STEPS - 1;
+
+  // Progress bar
+  document.getElementById('progressBar').style.width = Math.round(((stepIdx + 1) / steps.length) * 100) + '%';
+
+  // Nav buttons
+  document.getElementById('btnBack').style.display = stepIdx > 0 ? 'block' : 'none';
+  const isLast = stepIdx === steps.length - 1;
   document.getElementById('btnNext').style.display = isLast ? 'none' : 'flex';
+
+  const secId = steps[stepIdx].sec;
   if (isLast) buildSummary();
-  if (step === 1) buildAlerts();
-  state.currentStep = step;
+  if (secId === 'sec1') buildAlerts();
+  // Rebuild grifo list in RAPIDO mode
+  if (secId === 'sec1' && state.auditType === 'RAPIDO') buildSimpleProductList();
+
+  state.currentStep = stepIdx;
   window.scrollTo(0, 0);
 }
-function nextStep() { goTo(Math.min(state.currentStep + 1, STEPS - 1)); }
-function prevStep() { goTo(Math.max(state.currentStep - 1, 0)); }
+
+function nextStep() { goToStep(Math.min(state.currentStep + 1, getStepsForAuditType().length - 1)); }
+function prevStep() { goToStep(Math.max(state.currentStep - 1, 0)); }
 
 // ── CLIENT SEARCH ─────────────────────────────────────────────────────────
 function searchClient(val) {
@@ -659,7 +755,7 @@ function selectClient(num) {
   if (!c) return;
   state.client = c;
   document.getElementById('clientNum').value = c.num;
-  document.getElementById('razonSocial').value = c.razon;
+  document.getElementById('razonSocial').value = fant || c.razon;
   document.getElementById('zona').value = c.zona;
   document.getElementById('segmentacion').value = c.seg;
   document.getElementById('direccion').value = c.dir;
@@ -710,6 +806,155 @@ function mapSegToKey(seg) {
   if (!seg) return null;
   const map = { 'HomeCenter':'HC', 'Distribuidor':'DIST', 'A':'A', 'B':'B', 'C':'C', 'BAJA':'BAJA' };
   return map[seg] || seg;
+}
+
+// ── MODO RÁPIDO — Base de Líneas Simples ─────────────────────────────────
+// Se alimenta de DB.productosSimple (cargado desde BASE-PROD-SIMPLE del Excel)
+// Si no hay datos cargados, usa ejemplos ilustrativos
+if (!DB.productosSimple) {
+  DB.productosSimple = [
+    {tipo:"A", nombre:"Accesorios Baño", linea:"ACC-01", colores:"CR - BK - BB", costo:18000, estado:"VIGENTE", lanzamiento:false, oportunidad:false, imagen:""},
+    {tipo:"B", nombre:"Bimando Lavatorio", linea:"BIM-N3", colores:"SGR - FB", costo:39000, estado:"VIGENTE", lanzamiento:false, oportunidad:false, imagen:""},
+    {tipo:"B", nombre:"Bimando Bidet",     linea:"BIM-H4", colores:"SGR - FB - CR", costo:42000, estado:"VIGENTE", lanzamiento:true,  oportunidad:false, imagen:""},
+    {tipo:"C", nombre:"Cocina Monopalanca",linea:"COC-01", colores:"CR", costo:35000, estado:"VIGENTE", lanzamiento:false, oportunidad:true,  imagen:""},
+    {tipo:"M", nombre:"Monocomando Lav.",  linea:"MON-H4", colores:"CR - BK - BB - SGR - PB", costo:47500, estado:"VIGENTE", lanzamiento:false, oportunidad:false, imagen:""},
+    {tipo:"M", nombre:"Monocomando Bidet", linea:"MON-85", colores:"CR - BK - BB", costo:44000, estado:"VIGENTE", lanzamiento:true,  oportunidad:false, imagen:""},
+    {tipo:"M", nombre:"Monocomando Ducha", linea:"MON-L2", colores:"CR", costo:55000, estado:"DISCONTINUADA", lanzamiento:false, oportunidad:false, imagen:""},
+    {tipo:"F", nombre:"Franz Premium",     linea:"FZ-001",  colores:"CR - BK", costo:95000, estado:"VIGENTE", lanzamiento:false, oportunidad:false, imagen:""},
+  ];
+}
+
+// Color qty for simple mode: keyed by linea+color
+function simpleKey(linea, color) { return 'S||' + linea + '||' + color; }
+
+function buildSimpleProductList() {
+  // Show/hide the right container
+  document.getElementById('simpleProductSection').style.display = 'block';
+  document.getElementById('fullProductSection').style.display = 'none';
+
+  const el = document.getElementById('simpleProductList');
+  el.innerHTML = '';
+
+  // Group by tipo
+  const tipos = ['A','B','C','M','F'];
+  const tipoLabels = {A:'Accesorios', B:'Bimando', C:'Cocina', M:'Monocomando', F:'Franz'};
+  const tipoColors = {A:'#7D3C98', B:'#2980B9', C:'#E67E22', M:'#1B2A4A', F:'#4A1B2A'};
+
+  const productosParaMostrar = DB.productosSimple || [];
+
+  tipos.forEach(tipo => {
+    const items = productosParaMostrar.filter(p => p.tipo === tipo);
+    if (!items.length) return;
+
+    // Tipo header
+    const tipoDiv = document.createElement('div');
+    tipoDiv.innerHTML = `<div style="margin:12px 0 6px;padding:6px 10px;background:${tipoColors[tipo]};border-radius:8px;color:white;font-size:11px;font-weight:700;letter-spacing:1px">${tipo} — ${tipoLabels[tipo]}</div>`;
+    el.appendChild(tipoDiv);
+
+    items.forEach((p, rawIdx) => {
+      const colors = parseColors(p.colores);
+      colors.forEach(col => {
+        const key = simpleKey(p.linea, col);
+        if (state.colorQtys[key] === undefined) state.colorQtys[key] = 0;
+      });
+
+      const isDisco = p.estado === 'DISCONTINUADA';
+      const isLaunch = p.lanzamiento;
+      const isOpp = p.oportunidad;
+      const totalQty = colors.reduce((a, col) => a + (state.colorQtys[simpleKey(p.linea, col)] || 0), 0);
+
+      const card = document.createElement('div');
+      card.className = `simple-line-card${isDisco?' is-disco':isLaunch?' is-launch':isOpp?' is-opp':''}`;
+      card.id = `scard_${p.linea}`;
+
+      const colorRows = colors.map(col => {
+        const key = simpleKey(p.linea, col);
+        const qty = state.colorQtys[key] || 0;
+        const safeCol = col.replace(/[^a-zA-Z0-9]/g, '_');
+        return `<div class="color-qty-row">
+          <span class="color-label">${col}</span>
+          <div class="prod-qty-control">
+            <button class="qty-btn minus" onclick="changeSimpleQty('${p.linea}','${col}',-1,'${p.linea}')">−</button>
+            <span class="qty-value" id="sqty_${p.linea}_${safeCol}">${qty}</span>
+            <button class="qty-btn plus" onclick="changeSimpleQty('${p.linea}','${col}',1,'${p.linea}')">+</button>
+          </div>
+        </div>`;
+      }).join('');
+
+      // Notices on image
+      const notices = [];
+      if (isDisco) notices.push('<span class="img-notice" style="background:var(--red);color:white">DISC.</span>');
+      if (isLaunch) notices.push('<span class="img-notice" style="background:var(--orange);color:white">🆕 LANZAMIENTO</span>');
+      if (isOpp) notices.push('<span class="img-notice" style="background:var(--gold);color:var(--navy)">⭐ OPORTUNIDAD</span>');
+
+      card.innerHTML = `
+        <div class="simple-card-header" onclick="toggleSimpleCard('${p.linea}')">
+          <div class="simple-card-type" style="background:${tipoColors[tipo]}">${tipo}</div>
+          <div class="simple-card-info">
+            <div class="simple-card-name">${p.nombre}</div>
+            <div class="simple-card-sub">${p.linea} · ${p.colores}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div class="simple-card-total" id="stotal_${p.linea}">${totalQty > 0 ? totalQty + ' u.' : ''}</div>
+            <div style="font-size:11px;color:var(--text2)">${totalQty > 0 ? '&#9660;' : '&#9658;'}</div>
+          </div>
+        </div>
+        <div id="sdet_${p.linea}" style="display:none">
+          <div style="position:relative">
+            ${p.imagen
+              ? `<img class="simple-card-image" src="${p.imagen}" alt="${p.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+              : ''}
+            <div class="simple-card-image-placeholder" ${p.imagen ? 'style="display:none"' : ''}>🚿</div>
+            ${notices.length ? `<div class="image-notice-overlay">${notices.join('')}</div>` : ''}
+          </div>
+          <div class="simple-card-detail">
+            <div class="simple-card-flags">
+              <span class="flag-badge${isLaunch?' active-launch':''}">🆕 Lanzamiento${isLaunch?' ✓':''}</span>
+              <span class="flag-badge${isOpp?' active-opp':''}">⭐ Oportunidad${isOpp?' ✓':''}</span>
+              ${isDisco ? '<span class="flag-badge" style="background:var(--red-light);border-color:var(--red);color:var(--red)">⚠️ Discontinuada</span>' : ''}
+            </div>
+            <div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Cantidad por color:</div>
+            ${colorRows}
+          </div>
+        </div>`;
+      el.appendChild(card);
+    });
+  });
+
+  updateSimpleTotal();
+}
+
+function toggleSimpleCard(linea) {
+  const det = document.getElementById('sdet_' + linea);
+  if (det) det.style.display = det.style.display === 'none' ? 'block' : 'none';
+}
+
+function changeSimpleQty(linea, color, delta, cardLinea) {
+  const key = simpleKey(linea, color);
+  state.colorQtys[key] = Math.max(0, (state.colorQtys[key] || 0) + delta);
+  const safeCol = color.replace(/[^a-zA-Z0-9]/g, '_');
+  const el = document.getElementById('sqty_' + linea + '_' + safeCol);
+  if (el) el.textContent = state.colorQtys[key];
+  // Update card total
+  const p = (DB.productosSimple || []).find(x => x.linea === cardLinea);
+  if (p) {
+    const colors = parseColors(p.colores);
+    const total = colors.reduce((a, col) => a + (state.colorQtys[simpleKey(linea, col)] || 0), 0);
+    const totalEl = document.getElementById('stotal_' + cardLinea);
+    if (totalEl) totalEl.textContent = total > 0 ? total + ' u.' : '';
+  }
+  updateSimpleTotal();
+}
+
+function updateSimpleTotal() {
+  let total = 0;
+  (DB.productosSimple || []).forEach(p => {
+    const colors = parseColors(p.colores);
+    const qty = colors.reduce((a, col) => a + (state.colorQtys[simpleKey(p.linea, col)] || 0), 0);
+    total += qty * (p.costo || 0);
+  });
+  const el = document.getElementById('totalValueSimple');
+  if (el) el.textContent = '$' + total.toLocaleString('es-AR');
 }
 
 function parseColors(coloresStr) {
@@ -872,6 +1117,15 @@ function updateExhibTotal() {
 
 // ── ALERTS (step 1) ───────────────────────────────────────────────────────
 function buildAlerts() {
+  // Show/hide sections based on audit type
+  const isRapido = state.auditType === 'RAPIDO';
+  const simpleSection = document.getElementById('simpleProductSection');
+  const fullSection = document.getElementById('fullProductSection');
+  if (simpleSection) simpleSection.style.display = isRapido ? 'block' : 'none';
+  if (fullSection)   fullSection.style.display   = isRapido ? 'none'  : 'block';
+  if (isRapido) buildSimpleProductList();
+  else buildProductList();
+
   const el = document.getElementById('alertsZone');
   el.innerHTML = '';
   const discoExhibidos = getProductsForClient().filter(p => p.estado === 'DISCONTINUO' && (state.productQtys[p.cod] || 0) > 0);
@@ -1077,6 +1331,327 @@ function getAuditData() {
     alertasDiscos: getProductsForClient().filter(p => p.estado === 'DISCONTINUO' && (state.productQtys[p.cod] || 0) > 0).map(p => p.cod),
     alertasLanzamientos: getProductsForClient().filter(p => p.lanzamiento && !(state.productQtys[p.cod] || 0)).map(p => p.cod)
   };
+}
+
+function exportPDF() {
+  const d = getAuditData();
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const W = 210, M = 14;
+  let y = 0;
+
+  // Colors
+  const navy = [27, 42, 74];
+  const gold = [200, 168, 75];
+  const red = [192, 57, 43];
+  const redLight = [250, 219, 216];
+  const orange = [230, 126, 34];
+  const orangeLight = [253, 235, 208];
+  const green = [30, 132, 73];
+  const greenLight = [213, 245, 227];
+  const gray2 = [232, 236, 241];
+  const text2 = [90, 106, 130];
+
+  // ── HEADER BANNER ──
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, W, 26, 'F');
+  doc.setFillColor(...gold);
+  doc.roundedRect(M, 6, 14, 14, 2, 2, 'F');
+  doc.setTextColor(...navy);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text('FV', M + 7, 14.5, { align: 'center' });
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(15);
+  doc.text('Auditoría de Punto de Venta', M + 18, 12);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(200, 210, 225);
+  doc.text('FV Grifería — Sistema de captura', M + 18, 17.5);
+  doc.setFontSize(9);
+  doc.setTextColor(255, 255, 255);
+  doc.text(d.fecha + '  ·  ' + d.hora, W - M, 14, { align: 'right' });
+  y = 34;
+
+  // ── CLIENT INFO CARD ──
+  doc.setFillColor(244, 246, 249);
+  doc.roundedRect(M, y, W - 2 * M, 26, 2, 2, 'F');
+  doc.setTextColor(...navy);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.text(d.cliente.razon || '—', M + 4, y + 7);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(...text2);
+  doc.text('N° ' + (d.cliente.num || '—') + '   ·   ' + (d.cliente.dir || ''), M + 4, y + 12.5);
+  doc.text('Zona: ' + (d.cliente.zona || '—') + '   ·   Segmentación: ' + (d.cliente.seg || '—'), M + 4, y + 17);
+  doc.text((d.userRole || '') + ': ' + (d.userName || '—') + '   ·   Vendedor: ' + (d.cliente.vendedor || '—'), M + 4, y + 21.5);
+  y += 32;
+
+  // ── KPI ROW ──
+  const totalPzas = d.productos.reduce((a, p) => a + p.cantidad, 0);
+  const totalVal = d.productos.reduce((a, p) => a + p.cantidad * p.costo, 0);
+  const discoCount = d.alertasDiscos.length;
+  const kpis = [
+    { label: 'PIEZAS', value: String(totalPzas), color: navy },
+    { label: 'DISCONTINUOS', value: String(discoCount), color: discoCount > 0 ? red : green },
+    { label: 'FOTOS', value: String(d.fotoCount), color: navy },
+    { label: 'VALOR TOTAL', value: '$' + totalVal.toLocaleString('es-AR'), color: gold }
+  ];
+  const kpiW = (W - 2 * M - 3 * 3) / 4;
+  kpis.forEach((k, i) => {
+    const x = M + i * (kpiW + 3);
+    doc.setFillColor(255, 255, 255);
+    doc.setDrawColor(...gray2);
+    doc.roundedRect(x, y, kpiW, 18, 2, 2, 'FD');
+    doc.setTextColor(...k.color);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(k.value.length > 8 ? 11 : 14);
+    doc.text(k.value, x + kpiW / 2, y + 9, { align: 'center' });
+    doc.setTextColor(...text2);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(6.5);
+    doc.text(k.label, x + kpiW / 2, y + 14.5, { align: 'center' });
+  });
+  y += 24;
+
+  // ── GRIFERÍA TABLE ──
+  function sectionHeader(title, color) {
+    doc.setFillColor(...color);
+    doc.rect(M, y, W - 2 * M, 7, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.text(title, M + 3, y + 5);
+    y += 7;
+  }
+
+  function checkPageBreak(needed) {
+    if (y + needed > 285) {
+      doc.addPage();
+      y = 14;
+    }
+  }
+
+  checkPageBreak(20);
+  sectionHeader('GRIFERÍA EN EXHIBICIÓN', navy);
+
+  // Table header
+  doc.setFillColor(...gray2);
+  doc.rect(M, y, W - 2 * M, 6, 'F');
+  doc.setTextColor(...navy);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  const colX = { cod: M + 2, desc: M + 30, color: M + 110, cant: M + 135, costo: M + 152, total: M + 172 };
+  doc.text('CÓDIGO', colX.cod, y + 4);
+  doc.text('DESCRIPCIÓN / LÍNEA', colX.desc, y + 4);
+  doc.text('COLOR', colX.color, y + 4);
+  doc.text('CANT.', colX.cant, y + 4);
+  doc.text('COSTO U.', colX.costo, y + 4);
+  doc.text('TOTAL', colX.total, y + 4);
+  y += 6;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  let rowToggle = false;
+
+  d.productos.forEach(p => {
+    const detail = (p.coloresDetalle && p.coloresDetalle.length) ? p.coloresDetalle : [{ color: p.colores || '—', cantidad: p.cantidad }];
+    detail.forEach((cd, idx) => {
+      checkPageBreak(6);
+      const isDisco = p.estado === 'DISCONTINUO';
+      rowToggle = !rowToggle;
+      doc.setFillColor(isDisco ? 250 : (rowToggle ? 250 : 255), isDisco ? 219 : (rowToggle ? 250 : 255), isDisco ? 216 : (rowToggle ? 252 : 255));
+      doc.rect(M, y, W - 2 * M, 5.5, 'F');
+      doc.setTextColor(isDisco ? red[0] : 30, isDisco ? red[1] : 30, isDisco ? red[2] : 30);
+      if (idx === 0) {
+        doc.setFont('helvetica', 'bold');
+        doc.text(p.cod, colX.cod, y + 3.8);
+        doc.setFont('helvetica', 'normal');
+        const descTxt = (p.desc + ' · ' + p.linea).substring(0, 48);
+        doc.text(descTxt, colX.desc, y + 3.8);
+      }
+      doc.text(cd.color, colX.color, y + 3.8);
+      doc.setFont('helvetica', 'bold');
+      doc.text(String(cd.cantidad), colX.cant, y + 3.8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('$' + p.costo.toLocaleString('es-AR'), colX.costo, y + 3.8);
+      doc.text('$' + (cd.cantidad * p.costo).toLocaleString('es-AR'), colX.total, y + 3.8);
+      y += 5.5;
+    });
+  });
+
+  // Total row
+  checkPageBreak(8);
+  doc.setFillColor(...gold);
+  doc.rect(M, y, W - 2 * M, 7, 'F');
+  doc.setTextColor(...navy);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.text('TOTAL GRIFERÍA', M + 3, y + 4.8);
+  doc.text('$' + totalVal.toLocaleString('es-AR'), W - M - 3, y + 4.8, { align: 'right' });
+  y += 13;
+
+  // ── EXHIBIDORES TABLE ──
+  if (d.exhibidores.length) {
+    checkPageBreak(20);
+    sectionHeader('MÓDULOS DE EXHIBICIÓN', [127, 140, 141]);
+    doc.setFillColor(...gray2);
+    doc.rect(M, y, W - 2 * M, 6, 'F');
+    doc.setTextColor(...navy);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.text('CÓDIGO', M + 2, y + 4);
+    doc.text('DESCRIPCIÓN', M + 30, y + 4);
+    doc.text('CANT.', M + 135, y + 4);
+    doc.text('COSTO U.', M + 152, y + 4);
+    doc.text('TOTAL', M + 172, y + 4);
+    y += 6;
+    doc.setFont('helvetica', 'normal');
+    rowToggle = false;
+    let totalExh = 0;
+    d.exhibidores.forEach(ex => {
+      checkPageBreak(6);
+      rowToggle = !rowToggle;
+      doc.setFillColor(rowToggle ? 244 : 255, rowToggle ? 246 : 255, rowToggle ? 249 : 255);
+      doc.rect(M, y, W - 2 * M, 5.5, 'F');
+      doc.setTextColor(30, 30, 30);
+      doc.setFont('helvetica', 'bold');
+      doc.text(ex.cod, M + 2, y + 3.8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(ex.desc.substring(0, 55), M + 30, y + 3.8);
+      doc.text(String(ex.cantidad), M + 135, y + 3.8);
+      doc.text('$' + ex.costo.toLocaleString('es-AR'), M + 152, y + 3.8);
+      doc.text('$' + (ex.cantidad * ex.costo).toLocaleString('es-AR'), M + 172, y + 3.8);
+      totalExh += ex.cantidad * ex.costo;
+      y += 5.5;
+    });
+    checkPageBreak(8);
+    doc.setFillColor(220, 220, 220);
+    doc.rect(M, y, W - 2 * M, 7, 'F');
+    doc.setTextColor(...navy);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8.5);
+    doc.text('TOTAL MÓDULOS', M + 3, y + 4.8);
+    doc.text('$' + totalExh.toLocaleString('es-AR'), W - M - 3, y + 4.8, { align: 'right' });
+    y += 13;
+  }
+
+  // ── ALERTA: DISCONTINUOS ──
+  if (d.alertasDiscos.length > 0) {
+    checkPageBreak(14 + d.alertasDiscos.length * 9);
+    sectionHeader('⚠ PRODUCTOS DISCONTINUOS — ACCIÓN REQUERIDA', red);
+    d.productos.filter(p => p.estado === 'DISCONTINUO').forEach(p => {
+      checkPageBreak(11);
+      doc.setFillColor(...redLight);
+      doc.roundedRect(M, y, W - 2 * M, 9, 1.5, 1.5, 'F');
+      doc.setTextColor(...red);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8.5);
+      doc.text(p.cod + ' — ' + p.desc, M + 3, y + 4);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7.5);
+      doc.setTextColor(60, 60, 60);
+      const accion = p.reemplazaPor ? ('Reemplazar por: ' + p.reemplazaPor) : 'Coordinar con vendedor el producto de reemplazo';
+      doc.text(accion + '   ·   Cantidad exhibida: ' + p.cantidad + ' u.', M + 3, y + 7.5);
+      y += 11;
+    });
+    y += 3;
+  }
+
+  // ── ALERTA: LANZAMIENTOS ──
+  if (d.alertasLanzamientos.length > 0) {
+    checkPageBreak(14 + d.alertasLanzamientos.length * 7);
+    sectionHeader('🆕 LANZAMIENTOS SIN EXHIBIR', orange);
+    d.alertasLanzamientos.forEach(cod => {
+      checkPageBreak(8);
+      doc.setFillColor(...orangeLight);
+      doc.roundedRect(M, y, W - 2 * M, 6.5, 1.5, 1.5, 'F');
+      doc.setTextColor(...orange);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.text(cod + ' — gestionar exhibición de este lanzamiento', M + 3, y + 4.3);
+      y += 8.5;
+    });
+    y += 3;
+  }
+
+  // ── OBSERVACIONES / NOTAS ──
+  checkPageBreak(40);
+  sectionHeader('OBSERVACIONES Y NOTAS', [90, 106, 130]);
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(...gray2);
+  const obsBoxH = 34;
+  doc.roundedRect(M, y, W - 2 * M, obsBoxH, 1.5, 1.5, 'FD');
+  let oy = y + 5;
+  doc.setTextColor(...navy);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  if (d.estado) {
+    doc.text('Estado de la exhibición: ' + d.estado, M + 3, oy);
+    oy += 5;
+  }
+  if (d.mejoras) {
+    doc.setTextColor(...orange);
+    doc.text('Mejoras requeridas:', M + 3, oy);
+    oy += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(7.5);
+    const mejorasLines = doc.splitTextToSize(d.mejoras, W - 2 * M - 6);
+    doc.text(mejorasLines.slice(0, 3), M + 3, oy);
+    oy += mejorasLines.slice(0, 3).length * 3.6 + 2;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+  }
+  if (d.obs) {
+    doc.setTextColor(...navy);
+    doc.text('Observaciones:', M + 3, oy);
+    oy += 4;
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(7.5);
+    const obsLines = doc.splitTextToSize(d.obs, W - 2 * M - 6);
+    doc.text(obsLines.slice(0, 3), M + 3, oy);
+  }
+  if (!d.estado && !d.mejoras && !d.obs) {
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...text2);
+    doc.setFontSize(8);
+    doc.text('Sin observaciones registradas.', M + 3, oy);
+  }
+  // Free space for handwritten notes
+  doc.setFontSize(6.5);
+  doc.setTextColor(...text2);
+  doc.text('Espacio libre para notas adicionales:', M + 3, y + obsBoxH - 3);
+  y += obsBoxH + 6;
+
+  // ── COMPETENCIA ──
+  checkPageBreak(16);
+  sectionHeader('COMPETENCIA PRESENTE EN EL LOCAL', [125, 60, 152]);
+  doc.setFillColor(250, 250, 250);
+  doc.roundedRect(M, y, W - 2 * M, 10, 1.5, 1.5, 'F');
+  doc.setTextColor(60, 60, 60);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  const compTxt = [...d.competencia, d.otrasComp].filter(Boolean).join('  ·  ') || 'Ninguna marca de competencia registrada';
+  doc.text(compTxt, M + 3, y + 6, { maxWidth: W - 2 * M - 6 });
+  y += 16;
+
+  // ── FOOTER ──
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7);
+    doc.setTextColor(...text2);
+    doc.setFont('helvetica', 'normal');
+    doc.text('FV Grifería · Generado el ' + new Date().toLocaleString('es-AR'), M, 293);
+    doc.text('Página ' + p + ' / ' + pageCount, W - M, 293, { align: 'right' });
+  }
+
+  const fname = `FV_Auditoria_${d.cliente.num || 'XX'}_${d.fecha.replace(/-/g, '')}.pdf`;
+  doc.save(fname);
+  showToast('✅ PDF generado — subilo a SharePoint');
 }
 
 function exportCSV() {
