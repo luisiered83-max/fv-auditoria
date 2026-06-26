@@ -888,25 +888,35 @@ function buildSimpleProductList() {
       if (isOpp) notices.push('<span class="img-notice" style="background:var(--gold);color:var(--navy)">⭐ OPORTUNIDAD</span>');
 
       card.innerHTML = `
-        <div class="simple-card-header" onclick="toggleSimpleCard('${p.linea}')">
+        <!-- IMAGEN SIEMPRE VISIBLE -->
+        <div style="position:relative;background:var(--gray);border-radius:0">
+          ${p.imagen
+            ? `<img class="simple-card-image"
+                src="${p.imagen}"
+                alt="${p.nombre}"
+                crossorigin="use-credentials"
+                onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"
+                style="max-height:200px">`
+            : ''}
+          <div class="simple-card-image-placeholder" ${p.imagen ? 'style="display:none"' : ''}>🚿</div>
+          ${notices.length ? `<div class="image-notice-overlay">${notices.join('')}</div>` : ''}
+        </div>
+
+        <!-- HEADER con nombre y total — siempre visible -->
+        <div class="simple-card-header" onclick="toggleSimpleCard('${p.linea}', this)">
           <div class="simple-card-type" style="background:${tipoColors[tipo]}">${tipo}</div>
           <div class="simple-card-info">
             <div class="simple-card-name">${p.nombre}</div>
             <div class="simple-card-sub">${p.linea} · ${p.colores}</div>
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            <div class="simple-card-total" id="stotal_${p.linea}">${totalQty > 0 ? totalQty + ' u.' : ''}</div>
-            <div style="font-size:11px;color:var(--text2)">${totalQty > 0 ? '&#9660;' : '&#9658;'}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span class="simple-card-total" id="stotal_${p.linea}" style="color:${totalQty>0?'var(--green)':'var(--text2)'}">${totalQty > 0 ? totalQty + ' u.' : '—'}</span>
+            <span style="font-size:16px;color:var(--text2)" id="sarrow_${p.linea}">&#9660;</span>
           </div>
         </div>
-        <div id="sdet_${p.linea}" style="display:none">
-          <div style="position:relative">
-            ${p.imagen
-              ? `<img class="simple-card-image" src="${p.imagen}" alt="${p.nombre}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-              : ''}
-            <div class="simple-card-image-placeholder" ${p.imagen ? 'style="display:none"' : ''}>🚿</div>
-            ${notices.length ? `<div class="image-notice-overlay">${notices.join('')}</div>` : ''}
-          </div>
+
+        <!-- DETALLE COLORES — desplegable -->
+        <div id="sdet_${p.linea}" style="display:block">
           <div class="simple-card-detail">
             <div class="simple-card-flags">
               <span class="flag-badge${isLaunch?' active-launch':''}">🆕 Lanzamiento${isLaunch?' ✓':''}</span>
@@ -917,7 +927,7 @@ function buildSimpleProductList() {
             ${colorRows}
           </div>
         </div>`;
-      el.appendChild(card);
+            el.appendChild(card);
     });
   });
 
@@ -926,7 +936,11 @@ function buildSimpleProductList() {
 
 function toggleSimpleCard(linea) {
   const det = document.getElementById('sdet_' + linea);
-  if (det) det.style.display = det.style.display === 'none' ? 'block' : 'none';
+  const arrow = document.getElementById('sarrow_' + linea);
+  if (!det) return;
+  const isOpen = det.style.display !== 'none';
+  det.style.display = isOpen ? 'none' : 'block';
+  if (arrow) arrow.innerHTML = isOpen ? '&#9658;' : '&#9660;';
 }
 
 function changeSimpleQty(linea, color, delta, cardLinea) {
