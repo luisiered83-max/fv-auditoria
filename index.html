@@ -826,6 +826,7 @@ if (!DB.productosSimple) {
 
 // Color qty for simple mode: keyed by linea+color
 function simpleKey(linea, color) { return 'S||' + linea + '||' + color; }
+function safeId(str) { return String(str).replace(/[^a-zA-Z0-9]/g, '_'); }
 
 function buildSimpleProductList() {
   // Show/hide the right container
@@ -865,7 +866,7 @@ function buildSimpleProductList() {
 
       const card = document.createElement('div');
       card.className = `simple-line-card${isDisco?' is-disco':isLaunch?' is-launch':isOpp?' is-opp':''}`;
-      card.id = `scard_${p.linea}`;
+      card.id = `scard_${safeId(p.linea)}`;
 
       const colorRows = colors.map(col => {
         const key = simpleKey(p.linea, col);
@@ -874,9 +875,9 @@ function buildSimpleProductList() {
         return `<div class="color-qty-row">
           <span class="color-label">${col}</span>
           <div class="prod-qty-control">
-            <button class="qty-btn minus" onclick="changeSimpleQty('${p.linea}','${col}',-1,'${p.linea}')">−</button>
-            <span class="qty-value" id="sqty_${p.linea}_${safeCol}">${qty}</span>
-            <button class="qty-btn plus" onclick="changeSimpleQty('${p.linea}','${col}',1,'${p.linea}')">+</button>
+            <button class="qty-btn minus" onclick="changeSimpleQty('${p.linea}','${col}',-1,'${safeId(p.linea)}')">−</button>
+            <span class="qty-value" id="sqty_${safeId(p.linea)}_${safeCol}">${qty}</span>
+            <button class="qty-btn plus" onclick="changeSimpleQty('${p.linea}','${col}',1,'${safeId(p.linea)}')">+</button>
           </div>
         </div>`;
       }).join('');
@@ -894,8 +895,7 @@ function buildSimpleProductList() {
             ? `<img class="simple-card-image"
                 src="${p.imagen}"
                 alt="${p.nombre}"
-                crossorigin="use-credentials"
-                onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'"
+                onerror="tryAltExt(this, '${p.imagen}')"
                 style="max-height:200px">`
             : ''}
           <div class="simple-card-image-placeholder" ${p.imagen ? 'style="display:none"' : ''}>🚿</div>
@@ -903,20 +903,20 @@ function buildSimpleProductList() {
         </div>
 
         <!-- HEADER con nombre y total — siempre visible -->
-        <div class="simple-card-header" onclick="toggleSimpleCard('${p.linea}', this)">
+        <div class="simple-card-header" onclick="toggleSimpleCard('${safeId(p.linea)}', this)">
           <div class="simple-card-type" style="background:${tipoColors[tipo]}">${tipo}</div>
           <div class="simple-card-info">
             <div class="simple-card-name">${p.nombre}</div>
             <div class="simple-card-sub">${p.linea} · ${p.colores}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            <span class="simple-card-total" id="stotal_${p.linea}" style="color:${totalQty>0?'var(--green)':'var(--text2)'}">${totalQty > 0 ? totalQty + ' u.' : '—'}</span>
-            <span style="font-size:16px;color:var(--text2)" id="sarrow_${p.linea}">&#9660;</span>
+            <span class="simple-card-total" id="stotal_${safeId(p.linea)}" style="color:${totalQty>0?'var(--green)':'var(--text2)'}">${totalQty > 0 ? totalQty + ' u.' : '—'}</span>
+            <span style="font-size:16px;color:var(--text2)" id="sarrow_${safeId(p.linea)}">&#9660;</span>
           </div>
         </div>
 
         <!-- DETALLE COLORES — desplegable -->
-        <div id="sdet_${p.linea}" style="display:block">
+        <div id="sdet_${safeId(p.linea)}" style="display:block">
           <div class="simple-card-detail">
             <div class="simple-card-flags">
               <span class="flag-badge${isLaunch?' active-launch':''}">🆕 Lanzamiento${isLaunch?' ✓':''}</span>
@@ -947,14 +947,14 @@ function changeSimpleQty(linea, color, delta, cardLinea) {
   const key = simpleKey(linea, color);
   state.colorQtys[key] = Math.max(0, (state.colorQtys[key] || 0) + delta);
   const safeCol = color.replace(/[^a-zA-Z0-9]/g, '_');
-  const el = document.getElementById('sqty_' + linea + '_' + safeCol);
+  const el = document.getElementById('sqty_' + safeId(linea) + '_' + safeCol);
   if (el) el.textContent = state.colorQtys[key];
   // Update card total
   const p = (DB.productosSimple || []).find(x => x.linea === cardLinea);
   if (p) {
     const colors = parseColors(p.colores);
     const total = colors.reduce((a, col) => a + (state.colorQtys[simpleKey(linea, col)] || 0), 0);
-    const totalEl = document.getElementById('stotal_' + cardLinea);
+    const totalEl = document.getElementById('stotal_' + safeId(cardLinea));
     if (totalEl) totalEl.textContent = total > 0 ? total + ' u.' : '';
   }
   updateSimpleTotal();
@@ -969,6 +969,21 @@ function updateSimpleTotal() {
   });
   const el = document.getElementById('totalValueSimple');
   if (el) el.textContent = '$' + total.toLocaleString('es-AR');
+}
+
+function tryAltExt(img, originalSrc) {
+  // If .jpg fails try .png and vice versa, then show placeholder
+  if (originalSrc.endsWith('.jpg') && !img.dataset.triedPng) {
+    img.dataset.triedPng = '1';
+    img.src = originalSrc.replace(/\.jpg$/i, '.png');
+  } else if (originalSrc.endsWith('.png') && !img.dataset.triedJpg) {
+    img.dataset.triedJpg = '1';
+    img.src = originalSrc.replace(/\.png$/i, '.jpg');
+  } else {
+    img.onerror = null;
+    img.style.display = 'none';
+    if (img.nextElementSibling) img.nextElementSibling.style.display = 'flex';
+  }
 }
 
 function parseColors(coloresStr) {
