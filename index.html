@@ -200,8 +200,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 
 /* SIMPLE LINE CARDS (modo RAPIDO) */
 .simple-line-card{border:1.5px solid var(--gray2);border-radius:14px;margin-bottom:12px;overflow:hidden;transition:border-color 0.2s}
-.simple-line-card.is-disco{border-color:var(--red)}
-.simple-line-card.is-launch{border-color:var(--orange);box-shadow:0 0 0 2px rgba(230,126,34,0.15)}
+.simple-line-card.is-disco{border:3.5px solid var(--red);box-shadow:0 0 0 2px rgba(192,57,43,0.15)}
+.simple-line-card.is-launch{border:3px solid var(--orange);box-shadow:0 0 0 2px rgba(230,126,34,0.15)}
 .simple-line-card.is-opp{border-color:var(--gold)}
 .simple-card-header{display:flex;align-items:center;padding:10px 14px;gap:10px;cursor:pointer;background:white}
 .simple-card-header:active{background:var(--gray)}
@@ -220,6 +220,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 .flag-badge.active-opp{background:var(--yellow,#FFF9E6);border-color:#C09010;color:#C09010}
 .image-notice-overlay{position:absolute;top:6px;right:6px;display:flex;gap:4px;flex-direction:column;align-items:flex-end}
 .img-notice{padding:3px 8px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:0.3px}
+.launch-notice{background:var(--orange);color:white;font-size:13px;font-weight:800;padding:6px 14px;border-radius:10px;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(230,126,34,0.4)}
 
 /* FRANZ BADGE */
 .badge-franz{background:#F5E6F0;color:#4A1B2A}
@@ -813,7 +814,7 @@ function mapSegToKey(seg) {
 // Si no hay datos cargados, usa ejemplos ilustrativos
 if (!DB.productosSimple) {
   DB.productosSimple = [
-    {tipo:"A", nombre:"Accesorios Baño", linea:"ACC-01", colores:"CR - BK - BB", costo:18000, estado:"VIGENTE", lanzamiento:false, oportunidad:false, imagen:""},
+    {tipo:"A", nombre:"Accesorios Baño", linea:"ACC-01", colores:"CR - BK - BB", costo:18000, estado:"VIGENTE", lanzamiento:false, oportunidad:false, discHasta:"", imagen:""},
     {tipo:"B", nombre:"Bimando Lavatorio", linea:"BIM-N3", colores:"SGR - FB", costo:39000, estado:"VIGENTE", lanzamiento:false, oportunidad:false, imagen:""},
     {tipo:"B", nombre:"Bimando Bidet",     linea:"BIM-H4", colores:"SGR - FB - CR", costo:42000, estado:"VIGENTE", lanzamiento:true,  oportunidad:false, imagen:""},
     {tipo:"C", nombre:"Cocina Monopalanca",linea:"COC-01", colores:"CR", costo:35000, estado:"VIGENTE", lanzamiento:false, oportunidad:true,  imagen:""},
@@ -884,9 +885,10 @@ function buildSimpleProductList() {
 
       // Notices on image
       const notices = [];
-      if (isDisco) notices.push('<span class="img-notice" style="background:var(--red);color:white">DISC.</span>');
-      if (isLaunch) notices.push('<span class="img-notice" style="background:var(--orange);color:white">🆕 LANZAMIENTO</span>');
-      if (isOpp) notices.push('<span class="img-notice" style="background:var(--gold);color:var(--navy)">⭐ OPORTUNIDAD</span>');
+      if (isDisco) notices.push('<span class="img-notice" style="background:var(--red);color:white;font-size:11px;padding:4px 10px">⚠️ DISCONTINUADA</span>');
+      if (isLaunch) notices.push('<span class="img-notice launch-notice">🆕 LANZAMIENTO</span>');
+      if (isOpp) notices.push('<span class="img-notice" style="background:var(--gold);color:var(--navy);padding:4px 10px">⭐ OPORTUNIDAD</span>');
+      if (p.discHasta) notices.push('<span class="img-notice" style="background:var(--red);color:white;font-size:10px;padding:3px 8px">Disc. hasta: ${p.discHasta}</span>');
 
       card.innerHTML = `
         <!-- IMAGEN SIEMPRE VISIBLE -->
@@ -918,13 +920,9 @@ function buildSimpleProductList() {
         <!-- DETALLE COLORES — desplegable -->
         <div id="sdet_${safeId(p.linea)}" style="display:block">
           <div class="simple-card-detail">
-            <div class="simple-card-flags">
-              <span class="flag-badge${isLaunch?' active-launch':''}">🆕 Lanzamiento${isLaunch?' ✓':''}</span>
-              <span class="flag-badge${isOpp?' active-opp':''}">⭐ Oportunidad${isOpp?' ✓':''}</span>
-              ${isDisco ? '<span class="flag-badge" style="background:var(--red-light);border-color:var(--red);color:var(--red)">⚠️ Discontinuada</span>' : ''}
-            </div>
             <div style="font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px">Cantidad por color:</div>
             ${colorRows}
+            ${p.discHasta ? `<div style="margin-top:10px;padding:8px 12px;background:var(--red-light);border-radius:8px;border-left:3px solid var(--red);font-size:12px;font-weight:700;color:var(--red)">⛔ Discontinuación: ${p.discHasta}</div>` : ''}
           </div>
         </div>`;
             el.appendChild(card);
