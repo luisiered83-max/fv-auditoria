@@ -620,7 +620,29 @@ const progPct = [17, 34, 50, 67, 83, 100];
   updateStepTabs();
   buildExhibList();
   buildCompGrid();
+  // Auto-actualizar al abrir si hay DATA_SOURCE_URL configurada
+  if (DATA_SOURCE_URL) {
+    autoReloadData();
+  }
 })();
+
+async function autoReloadData() {
+  try {
+    document.getElementById('lastUpdated').textContent = 'Actualizando...';
+    const r = await fetch(DATA_SOURCE_URL + '?t=' + Date.now());
+    if (!r.ok) throw new Error('Error ' + r.status);
+    const newDB = await r.json();
+    DB = newDB;
+    document.getElementById('lastUpdated').textContent = 'Actualizado: ' + DB.lastUpdated;
+    updateStepTabs();
+    buildExhibList();
+    buildCompGrid();
+    // Si ya hay un cliente seleccionado, rebuild product list
+    if (state.client) buildProductList();
+  } catch(e) {
+    document.getElementById('lastUpdated').textContent = 'Actualizado: ' + DB.lastUpdated + ' (local)';
+  }
+}
 
 // ── DATA RELOAD ───────────────────────────────────────────────────────────
 async function reloadData() {
