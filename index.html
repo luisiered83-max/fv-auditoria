@@ -193,6 +193,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 .loading-overlay .loading-text{color:white;font-size:14px;font-weight:600}
 .loading-overlay.hidden{display:none}
 
+/* COLLAPSIBLE TIPO GROUPS */
+.tipo-group-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-radius:10px;cursor:pointer;margin:10px 0 4px;user-select:none;transition:opacity 0.15s}
+.tipo-group-header:active{opacity:0.8}
+.tipo-group-title{display:flex;align-items:center;gap:10px}
+.tipo-group-letter{width:30px;height:30px;border-radius:8px;background:rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800}
+.tipo-group-name{font-size:13px;font-weight:700;color:white;letter-spacing:0.5px}
+.tipo-group-count{font-size:11px;color:rgba(255,255,255,0.75);margin-left:4px}
+.tipo-group-arrow{font-size:16px;color:rgba(255,255,255,0.8);transition:transform 0.25s}
+.tipo-group-arrow.collapsed{transform:rotate(-90deg)}
+.tipo-group-body{overflow:hidden;transition:max-height 0.3s ease}
+.tipo-group-body.collapsed{max-height:0 !important}
+
 /* COLOR QTY ROWS */
 .color-qty-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--gray2)}
 .color-qty-row:last-child{border-bottom:none}
@@ -870,10 +882,30 @@ function buildSimpleProductList() {
     const items = productosParaMostrar.filter(p => p.tipo === tipo);
     if (!items.length) return;
 
-    // Tipo header
-    const tipoDiv = document.createElement('div');
-    tipoDiv.innerHTML = `<div style="margin:12px 0 6px;padding:6px 10px;background:${tipoColors[tipo]};border-radius:8px;color:white;font-size:11px;font-weight:700;letter-spacing:1px">${tipo} — ${tipoLabels[tipo]}</div>`;
-    el.appendChild(tipoDiv);
+    // Tipo group — collapsible
+    const groupId = 'tgroup_' + tipo;
+    const bodyId  = 'tbody_' + tipo;
+    // Count units already recorded for this group
+    const groupQty = items.reduce((acc, p) => {
+      return acc + parseColors(p.colores).reduce((a, col) => a + (state.colorQtys[simpleKey(p.linea, col)] || 0), 0);
+    }, 0);
+
+    const groupDiv = document.createElement('div');
+    groupDiv.innerHTML = `
+      <div class="tipo-group-header" id="${groupId}" onclick="toggleTipoGroup('${tipo}')" style="background:${tipoColors[tipo]}">
+        <div class="tipo-group-title">
+          <div class="tipo-group-letter">${tipo}</div>
+          <div>
+            <div class="tipo-group-name">${tipoLabels[tipo]}</div>
+            <div class="tipo-group-count">${items.length} línea${items.length !== 1 ? 's' : ''}${groupQty > 0 ? ' · ' + groupQty + ' u. cargadas' : ''}</div>
+          </div>
+        </div>
+        <div class="tipo-group-arrow" id="arrow_${tipo}">▼</div>
+      </div>
+      <div class="tipo-group-body" id="${bodyId}" style="max-height:9999px"></div>`;
+    el.appendChild(groupDiv);
+
+    const bodyEl = document.getElementById(bodyId);
 
     items.forEach((p, rawIdx) => {
       const colors = parseColors(p.colores);
@@ -947,11 +979,31 @@ function buildSimpleProductList() {
             ${p.discHasta ? `<div style="margin-top:10px;padding:8px 12px;background:var(--red-light);border-radius:8px;border-left:3px solid var(--red);font-size:12px;font-weight:700;color:var(--red)">⛔ Discontinuación: ${p.discHasta}</div>` : ''}
           </div>
         </div>`;
-            el.appendChild(card);
+            bodyEl.appendChild(card);
     });
   });
 
   updateSimpleTotal();
+}
+
+function toggleTipoGroup(tipo) {
+  const body  = document.getElementById('tbody_' + tipo);
+  const arrow = document.getElementById('arrow_' + tipo);
+  if (!body) return;
+  const isOpen = !body.classList.contains('collapsed');
+  if (isOpen) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      body.classList.add('collapsed');
+      body.style.maxHeight = '0';
+    });
+  } else {
+    body.classList.remove('collapsed');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    // Remove inline max-height after transition so content can grow
+    setTimeout(() => { if (!body.classList.contains('collapsed')) body.style.maxHeight = '9999px'; }, 320);
+  }
+  if (arrow) arrow.classList.toggle('collapsed', isOpen);
 }
 
 function toggleSimpleCard(linea) {
@@ -978,6 +1030,19 @@ function changeSimpleQty(linea, color, delta, cardLinea) {
     if (totalEl) totalEl.textContent = total > 0 ? total + ' u.' : '';
   }
   updateSimpleTotal();
+  // Refresh group count label
+  const items2 = (DB.productosSimple || []).filter(p => p.tipo === (DB.productosSimple || []).find(x => x.linea === linea)?.tipo);
+  const tipo2 = (DB.productosSimple || []).find(x => x.linea === linea)?.tipo;
+  if (tipo2) {
+    const tipoItems = (DB.productosSimple || []).filter(p => p.tipo === tipo2);
+    const gQty = tipoItems.reduce((acc, p) => {
+      return acc + parseColors(p.colores).reduce((a, col) => a + (state.colorQtys[simpleKey(p.linea, col)] || 0), 0);
+    }, 0);
+    const countEl = document.querySelector('#tgroup_' + tipo2 + ' .tipo-group-count');
+    if (countEl) {
+      countEl.textContent = tipoItems.length + ' línea' + (tipoItems.length !== 1 ? 's' : '') + (gQty > 0 ? ' · ' + gQty + ' u. cargadas' : '');
+    }
+  }
 }
 
 function updateSimpleTotal() {
