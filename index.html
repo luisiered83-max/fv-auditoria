@@ -113,7 +113,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
 .thumb-del{position:absolute;top:2px;right:2px;width:16px;height:16px;background:var(--red);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;color:white;cursor:pointer}
 
 /* COMPETITION */
-.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.comp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
 .comp-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--gray2);border-radius:10px;cursor:pointer;transition:all 0.15s;user-select:none}
 .comp-item.checked{border-color:var(--red);background:var(--red-light)}
 .comp-checkbox{width:20px;height:20px;border:2px solid var(--gray2);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all 0.15s}
@@ -438,7 +438,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--gray);color:var(--text);m
   <div class="card">
     <div class="card-header"><span>🏁</span>Presencia de Competencia</div>
     <div class="card-body">
-      <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Marcá las marcas presentes en el local:</p>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:8px">Tocá para marcar las marcas presentes en el local:</p>
       <div class="comp-grid" id="compGrid"></div>
       <div class="field-group" style="margin-top:12px">
         <label class="field-label">Otras marcas</label>
@@ -601,7 +601,25 @@ let DB = {
     {cod:"FZ-001", desc:"Monocomando Franz Serie 1", linea:"Franz Premium", colores:"CR - BK", estado:"ACTIVO", costo:95000, lanzamiento:false, reemplazaPor:""},
     {cod:"FZ-002", desc:"Monocomando Franz Serie 2", linea:"Franz Premium", colores:"CR",       estado:"ACTIVO", costo:88000, lanzamiento:true,  reemplazaPor:""},
   ],
-  competitors: ["PEIRANO","PIAZZA","AQUALAF","ROCA","VASSER","HIDROMET","ANDES","GENEBRE","ESTALGRI","HYDROS","H&D","HANSGROHE","CHINO"]
+  competitors: [
+    {name:"PEIRANO",            cat:"Nacional"},
+    {name:"PIAZZA",             cat:"Nacional"},
+    {name:"AQUALAF / DECA",     cat:"Nacional"},
+    {name:"VASSER",             cat:"Nacional"},
+    {name:"HIDROMET",           cat:"Nacional"},
+    {name:"ANDES",              cat:"Nacional"},
+    {name:"GENEBRE",            cat:"Nacional"},
+    {name:"ESTALGRI",           cat:"Nacional"},
+    {name:"HYDROS",             cat:"Nacional"},
+    {name:"H&D",                cat:"Nacional"},
+    {name:"FERRUM",             cat:"Nacional"},
+    {name:"ROCA",               cat:"Internacional"},
+    {name:"HANSGROHE",          cat:"Internacional"},
+    {name:"GROHE",              cat:"Internacional"},
+    {name:"IMPORTADO GENERICO", cat:"Importado"},
+    {name:"CHINO S/MARCA",      cat:"Importado"},
+    {name:"OTRA",               cat:"Otra"}
+  ]
 };
 
 // ── STATE ────────────────────────────────────────────────────────────────
@@ -1256,27 +1274,65 @@ function buildAlerts() {
 function buildCompGrid() {
   const el = document.getElementById('compGrid');
   el.innerHTML = '';
+
+  // Group by category
+  const cats = {};
   DB.competitors.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'comp-item';
-    div.id = `comp_${c}`;
-    div.innerHTML = `<div class="comp-checkbox" id="chk_${c}"></div><div class="comp-name">${c}</div>`;
-    div.onclick = () => toggleComp(c);
-    el.appendChild(div);
+    const name = typeof c === 'string' ? c : c.name;
+    const cat  = typeof c === 'string' ? 'Otras' : c.cat;
+    if (!cats[cat]) cats[cat] = [];
+    cats[cat].push(name);
+  });
+
+  const catColors = {
+    'Nacional':       {bg:'#EAF0FB', fg:'#1B2A4A', dot:'#1B2A4A'},
+    'Internacional':  {bg:'#F5E6F0', fg:'#4A1B2A', dot:'#4A1B2A'},
+    'Importado':      {bg:'#FFF9E6', fg:'#C09010', dot:'#C09010'},
+    'Otra':           {bg:'#F2F3F4', fg:'#7F8C8D', dot:'#7F8C8D'},
+  };
+
+  Object.entries(cats).forEach(([cat, names]) => {
+    const colors = catColors[cat] || catColors['Otra'];
+
+    // Category header
+    const header = document.createElement('div');
+    header.style.cssText = `grid-column:1/-1;display:flex;align-items:center;gap:8px;margin:10px 0 4px;`;
+    header.innerHTML = `
+      <div style="width:8px;height:8px;border-radius:50%;background:${colors.dot};flex-shrink:0"></div>
+      <span style="font-size:10px;font-weight:700;color:${colors.fg};text-transform:uppercase;letter-spacing:0.8px">${cat}</span>
+      <div style="flex:1;height:1px;background:${colors.bg}"></div>`;
+    el.appendChild(header);
+
+    // Items
+    names.forEach(name => {
+      if (!state.competitors) state.competitors = new Set();
+      const isChecked = state.competitors.has(name);
+      const div = document.createElement('div');
+      div.className = 'comp-item' + (isChecked ? ' checked' : '');
+      div.id = `comp_${name.replace(/[^a-zA-Z0-9]/g,'_')}`;
+      div.innerHTML = `
+        <div class="comp-checkbox" id="chk_${name.replace(/[^a-zA-Z0-9]/g,'_')}" style="${isChecked?'background:var(--red);border-color:var(--red);color:white':''}">
+          ${isChecked ? '✓' : ''}
+        </div>
+        <div class="comp-name">${name}</div>`;
+      div.onclick = () => toggleComp(name);
+      el.appendChild(div);
+    });
   });
 }
 
 function toggleComp(name) {
-  const item = document.getElementById(`comp_${name}`);
-  const chk = document.getElementById(`chk_${name}`);
+  const safeN = name.replace(/[^a-zA-Z0-9]/g,'_');
+  const item = document.getElementById('comp_' + safeN);
+  const chk  = document.getElementById('chk_'  + safeN);
   if (state.competitors.has(name)) {
     state.competitors.delete(name);
-    item.classList.remove('checked');
-    chk.textContent = '';
+    if (item) item.classList.remove('checked');
+    if (chk) { chk.textContent = ''; chk.style.background=''; chk.style.borderColor=''; chk.style.color=''; }
   } else {
     state.competitors.add(name);
-    item.classList.add('checked');
-    chk.textContent = '✓';
+    if (item) item.classList.add('checked');
+    if (chk) { chk.textContent = '✓'; chk.style.background='var(--red)'; chk.style.borderColor='var(--red)'; chk.style.color='white'; }
   }
 }
 
